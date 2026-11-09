@@ -107,8 +107,35 @@
       outline: 2px solid var(--accent);
       outline-offset: 2px;
     }
+
+    /* Seamless reader view (no outer background gap on mobile) */
+    body.in-reader-view .app-container {
+      background-color: var(--reader-bg) !important;
+    }
+    body.in-reader-view #main-container {
+      padding: 0 !important;
+      max-width: 100% !important;
+    }
+    body.in-reader-view footer {
+      display: none !important;
+    }
+
+    @media (max-width: 768px) {
+      body.in-reader-view #reader-content-viewport {
+        border-radius: 0 !important;
+        border-left: none !important;
+        border-right: none !important;
+        border-top: none !important;
+        box-shadow: none !important;
+        margin-top: 3.5rem !important;
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+        padding-top: 1.5rem !important;
+        padding-bottom: 3rem !important;
+      }
+    }
   </style>
-<style data-link-removed-style>a[data-link-removed],a[href*="zPythonSafez"]:not([onclick]){pointer-events:none!important;cursor:default!important;opacity:.6}</style></head>
+</head>
 <body class="theme-light">
   
   <div class="app-container flex flex-col min-height-screen antialiased select-none md:select-text">
@@ -155,7 +182,7 @@
     </div>
 
     <!-- MAIN HEADER -->
-    <header class="border-b shadow-sm sticky top-0 z-30 transition-colors" style="background-color: var(--bg-card); border-color: var(--border-color);">
+    <header id="main-header" class="border-b shadow-sm sticky top-0 z-30 transition-colors" style="background-color: var(--bg-card); border-color: var(--border-color);">
       <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateTo('dashboard')">
           <div class="p-2 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl shadow-md">
@@ -186,7 +213,7 @@
     </header>
 
     <!-- CONTENT WRAPPER -->
-    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-6">
+    <main id="main-container" class="flex-grow max-w-6xl w-full mx-auto px-4 py-6">
 
       <!-- ================= SECTION 1: DASHBOARD (LIBRARY) ================= -->
       <section id="view-dashboard" class="space-y-6">
@@ -325,14 +352,21 @@
             <div class="p-4 rounded-xl border text-xs space-y-2.5" style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-muted);">
               <h4 class="font-bold flex items-center gap-1.5 text-xs text-blue-600">
                 <i data-lucide="help-circle" class="w-4 h-4"></i>
-                <span>วิธีคัดลอกจาก Google Docs</span>
+                <span>วิธีคัดลอกจาก Google Docs หรือนำเข้า JSON</span>
               </h4>
               <ol class="list-decimal pl-4 space-y-1.5">
                 <li>เปิด Google Doc หรือไฟล์งานเขียนนิยายของคุณ</li>
                 <li>กดเลือกทั้งหมด <kbd class="px-1 py-0.5 bg-gray-200 dark:bg-slate-700 rounded">Ctrl + A</kbd> (หรือ <kbd class="px-1 py-0.5 bg-gray-200 dark:bg-slate-700 rounded">⌘ + A</kbd>)</li>
-                <li>กดคัดลอกแล้วนำมาวางในช่องขวามือ</li>
-                <li>ระบบจะตรวจจับคำว่า <strong>"บทที่"</strong>, <strong>"ตอนที่"</strong> หรือ <strong>"Chapter"</strong> เพื่อแยกบทให้อัตโนมัติ!</li>
+                <li>กดคัดลอกแล้วนำมาวางในช่องขวามือ (รองรับทั้งข้อความปกติและโค้ด JSON)</li>
+                <li>ระบบจะตรวจจับคำว่า <strong>"บทที่"</strong>, <strong>"ตอนที่"</strong>, <strong>"Chapter"</strong> หรือโครงสร้าง <strong>JSON</strong> เพื่อแยกบทให้อัตโนมัติ!</li>
               </ol>
+              <div class="pt-2 border-t" style="border-color: var(--border-color)">
+                <label class="w-full py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer hover:opacity-85 transition" style="border-color: var(--border-color); color: var(--text-main);">
+                  <i data-lucide="upload" class="w-4 h-4 text-blue-600"></i>
+                  <span>อัปโหลดไฟล์ .json / .txt</span>
+                  <input type="file" id="import-direct-file" accept=".json,.txt" onchange="handleDirectImportFile(event)" class="hidden">
+                </label>
+              </div>
             </div>
           </div>
 
@@ -498,6 +532,29 @@
               </div>
             </div>
 
+            <!-- Text Alignment Selector -->
+            <div class="space-y-2">
+              <label class="block text-[10px] font-bold uppercase tracking-wider" style="color: var(--text-muted)">การจัดแนวข้อความ</label>
+              <div class="grid grid-cols-4 gap-1 text-[10px]">
+                <button onclick="changeTextAlign('left')" id="align-btn-left" class="py-1.5 rounded border flex flex-col items-center justify-center gap-0.5 font-medium transition" title="ชิดซ้าย">
+                  <i data-lucide="align-left" class="w-3.5 h-3.5"></i>
+                  <span>ชิดซ้าย</span>
+                </button>
+                <button onclick="changeTextAlign('center')" id="align-btn-center" class="py-1.5 rounded border flex flex-col items-center justify-center gap-0.5 font-medium transition" title="กึ่งกลาง">
+                  <i data-lucide="align-center" class="w-3.5 h-3.5"></i>
+                  <span>กึ่งกลาง</span>
+                </button>
+                <button onclick="changeTextAlign('right')" id="align-btn-right" class="py-1.5 rounded border flex flex-col items-center justify-center gap-0.5 font-medium transition" title="ชิดขวา">
+                  <i data-lucide="align-right" class="w-3.5 h-3.5"></i>
+                  <span>ชิดขวา</span>
+                </button>
+                <button onclick="changeTextAlign('justify')" id="align-btn-justify" class="py-1.5 rounded border flex flex-col items-center justify-center gap-0.5 font-medium transition" title="กระจายเต็ม">
+                  <i data-lucide="align-justify" class="w-3.5 h-3.5"></i>
+                  <span>กระจาย</span>
+                </button>
+              </div>
+            </div>
+
             <!-- Padding Selector -->
             <div class="space-y-2">
               <label class="block text-[10px] font-bold uppercase tracking-wider" style="color: var(--text-muted)">ความกว้างขอบหน้าจอ</label>
@@ -523,25 +580,36 @@
             </div>
 
             <!-- NOVEL BODY TEXT -->
-            <div id="reader-paragraphs" class="space-y-6 text-justify">
+            <div id="reader-paragraphs" class="space-y-6">
               <!-- Paragraphs will be dynamically inserted here -->
             </div>
 
             <!-- Bottom Navigation Bar for Next/Prev Chapters -->
-            <div class="border-t pt-8 flex items-center justify-between gap-4" style="border-color: rgba(120, 120, 120, 0.15)">
-              <button onclick="navigateChapter('prev')" id="prev-chapter-btn" class="px-4 py-2 bg-black bg-opacity-5 hover:bg-opacity-10 rounded-xl transition flex items-center gap-1.5 text-sm font-semibold">
+            <div class="border-t pt-8 grid grid-cols-3 gap-3 w-full text-center" style="border-color: rgba(120, 120, 120, 0.15)">
+              <button onclick="navigateChapter('prev')" id="prev-chapter-btn" class="py-2.5 px-3 bg-black bg-opacity-5 hover:bg-opacity-10 rounded-xl transition flex items-center justify-center gap-1.5 text-xs sm:text-sm font-semibold w-full text-center">
                 <i data-lucide="chevron-left" class="w-4 h-4"></i>
-                <span>ตอนก่อนหน้า</span>
+                <span>ก่อนหน้า</span>
               </button>
-              <button onclick="toggleTOC()" class="px-4 py-2 bg-black bg-opacity-5 hover:bg-opacity-10 rounded-xl transition text-xs font-semibold">
+              <button onclick="toggleTOC()" class="py-2.5 px-3 bg-black bg-opacity-5 hover:bg-opacity-10 rounded-xl transition flex items-center justify-center gap-1.5 text-xs sm:text-sm font-semibold w-full text-center">
+                <i data-lucide="list" class="w-4 h-4"></i>
                 <span>สารบัญ</span>
               </button>
-              <button onclick="navigateChapter('next')" id="next-chapter-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition flex items-center gap-1.5 text-sm font-semibold">
-                <span>ตอนต่อไป</span>
+              <button onclick="navigateChapter('next')" id="next-chapter-btn" class="py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition flex items-center justify-center gap-1.5 text-xs sm:text-sm font-semibold w-full text-center">
+                <span>ถัดไป</span>
                 <i data-lucide="chevron-right" class="w-4 h-4"></i>
               </button>
             </div>
 
+          </div>
+
+          <!-- Floating Smart Scroll Buttons (Go to Top / Bottom - Option 1) -->
+          <div id="reader-scroll-controls" class="fixed right-4 bottom-24 z-30 flex flex-col gap-2 transition-all duration-300 opacity-0 pointer-events-none">
+            <button onclick="scrollToTop()" class="p-2.5 rounded-full shadow-md border backdrop-blur-md transition-all duration-200 active:scale-90 flex items-center justify-center hover:opacity-100" style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);" title="ไปบนสุด">
+              <i data-lucide="chevron-up" class="w-5 h-5"></i>
+            </button>
+            <button onclick="scrollToBottom()" class="p-2.5 rounded-full shadow-md border backdrop-blur-md transition-all duration-200 active:scale-90 flex items-center justify-center hover:opacity-100" style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);" title="ไปล่างสุด">
+              <i data-lucide="chevron-down" class="w-5 h-5"></i>
+            </button>
           </div>
 
           <!-- Quick feedback message to show bookmarks added -->
@@ -619,49 +687,6 @@
             </div>
           </div>
 
-          <!-- Cloud Sync Bridge -->
-          <div class="p-5 rounded-2xl border space-y-4" style="background-color: var(--bg-card); border-color: var(--border-color);">
-            <h3 class="font-bold text-base flex items-center gap-2 border-b pb-2" style="border-color: var(--border-color)">
-              <i data-lucide="refresh-cw" class="w-5 h-5 text-indigo-500"></i>
-              <span>ระบบซิงค์ข้อมูลผ่านคลาวด์ชั่วคราว (Cloud Sync Bridge)</span>
-            </h3>
-            
-            <p class="text-xs" style="color: var(--text-muted)">เชื่อมโยงข้อมูลนิยายระหว่างคอมพิวเตอร์และมือถือของคุณแบบง่ายๆ โดยไม่ต้องล็อกอินหรือสมัครสมาชิก เพียงใช้รหัส PIN 6 หลักเพื่อส่งข้อมูลข้ามอุปกรณ์</p>
-
-            <div class="grid grid-cols-1 gap-4 pt-2">
-              <!-- Send Side -->
-              <div class="p-4 rounded-xl bg-black bg-opacity-5 border space-y-3" style="border-color: var(--border-color)">
-                <h4 class="text-xs font-bold text-blue-600 flex items-center gap-1">
-                  <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                  <span>ส่งข้อมูลไปยังมือถือหรืออุปกรณ์อื่น</span>
-                </h4>
-                <button onclick="generateSyncCode()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition">
-                  สร้างรหัสซิงค์ชั่วคราว
-                </button>
-                <div id="sync-send-result" class="hidden text-center space-y-2 pt-2">
-                  <span class="text-2xl font-extrabold tracking-widest text-emerald-600" id="sync-pin-display">------</span>
-                  <p class="text-[10px] text-gray-500">กรอกรหัสนี้บนมือถือเพื่อดึงข้อมูล หรือสแกน QR Code ด้านล่าง</p>
-                  <div class="flex justify-center py-2 bg-white rounded-lg inline-block mx-auto max-w-[150px]" id="sync-qr-container"></div>
-                </div>
-              </div>
-
-              <!-- Receive Side -->
-              <div class="p-4 rounded-xl bg-black bg-opacity-5 border space-y-3" style="border-color: var(--border-color)">
-                <h4 class="text-xs font-bold text-emerald-600 flex items-center gap-1">
-                  <i data-lucide="download-cloud" class="w-3.5 h-3.5"></i>
-                  <span>ดึงข้อมูลจากคอมพิวเตอร์หรืออุปกรณ์อื่น</span>
-                </h4>
-                <div class="flex gap-2">
-                  <input type="text" id="sync-input-pin" placeholder="กรอกรหัส 6 หลัก" maxlength="24" class="w-full px-3 py-1.5 border rounded-lg text-center font-bold tracking-widest bg-transparent uppercase" style="border-color: var(--border-color)">
-                  <button onclick="fetchSyncData()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition whitespace-nowrap">
-                    ซิงค์ข้อมูล
-                  </button>
-                </div>
-                <p class="text-[10px]" style="color: var(--text-muted)">เมื่อซิงค์สำเร็จ นิยายจากเครื่องแรกจะถูกโหลดเข้ามาแทนที่บนเครื่องนี้ทันที</p>
-              </div>
-            </div>
-          </div>
-
           <!-- Developer Info & Factory reset -->
           <div class="p-5 rounded-2xl border space-y-4 md:col-span-2" style="background-color: var(--bg-card); border-color: var(--border-color);">
             <h3 class="font-bold text-rose-500 text-base flex items-center gap-2 border-b pb-2" style="border-color: var(--border-color)">
@@ -725,22 +750,50 @@
               </div>
             </div>
 
-            <!-- Add Single Chapter Card -->
+            <!-- Add Single / Multiple Chapters Card -->
             <div class="p-5 rounded-2xl border space-y-4" style="background-color: var(--bg-card); border-color: var(--border-color);">
-              <h3 class="font-bold text-sm border-b pb-2 flex items-center gap-1.5" style="border-color: var(--border-color)">
-                <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-500"></i>
-                <span>เพิ่มตอนใหม่ต่อท้าย</span>
-              </h3>
+              <div class="flex items-center justify-between border-b pb-2 gap-2" style="border-color: var(--border-color)">
+                <h3 class="font-bold text-sm flex items-center gap-1.5">
+                  <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-500"></i>
+                  <span>เพิ่มตอนใหม่ต่อท้าย</span>
+                </h3>
+                <div class="flex items-center gap-1.5 text-[11px]">
+                  <span style="color: var(--text-muted)">แยกบท:</span>
+                  <select id="new-chap-split-keyword" class="px-2 py-0.5 rounded border bg-transparent font-medium" style="border-color: var(--border-color)">
+                    <option value="auto">ตรวจจับอัตโนมัติ</option>
+                    <option value="บทที่">บทที่</option>
+                    <option value="ตอนที่">ตอนที่</option>
+                    <option value="Chapter">Chapter</option>
+                    <option value="---">สัญลักษณ์ "---"</option>
+                  </select>
+                </div>
+              </div>
               <div class="space-y-3 text-sm">
                 <div>
-                  <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted)">ชื่อตอน (เช่น บทที่ 3: เผชิญหน้า)</label>
-                  <input type="text" id="new-chap-title" placeholder="พิมพ์ชื่อตอน..." class="w-full px-3 py-2 rounded-lg border bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" style="border-color: var(--border-color)">
+                  <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted)">ชื่อตอน (เว้นว่างได้หากให้ระบบตรวจจับหลายตอนอัตโนมัติ)</label>
+                  <input type="text" id="new-chap-title" placeholder="เว้นว่างเพื่อแยกหลายตอนอัตโนมัติ หรือพิมพ์ชื่อตอน..." class="w-full px-3 py-2 rounded-lg border bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" style="border-color: var(--border-color)">
                 </div>
                 <div>
-                  <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted)">เนื้อหาตอนใหม่</label>
-                  <textarea id="new-chap-content" placeholder="วางเนื้อหานิยายของตอนนี้..." rows="6" class="w-full px-3 py-2 rounded-lg border bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" style="border-color: var(--border-color)"></textarea>
+                  <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted)">เนื้อหาตอนใหม่ (วางทีละหลายตอนเพื่อให้ระบบแยกตอนอัตโนมัติได้)</label>
+                  <textarea id="new-chap-content" placeholder="วางเนื้อหานิยาย 1 ตอน หรือหลายตอนต่อเนื่องกัน (เช่น บทที่ 3..., บทที่ 4...) ระบบจะตรวจจับและแบ่งตอนต่อท้ายให้อัตโนมัติ..." rows="7" class="w-full px-3 py-2 rounded-lg border bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" style="border-color: var(--border-color)"></textarea>
                 </div>
-                <button onclick="addNewChapterToActiveNovel()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition">เพิ่มตอนต่อท้ายทันที</button>
+                <div class="flex flex-col sm:flex-row gap-2">
+                  <button onclick="previewNewChaptersForActiveNovel()" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-xs transition flex items-center justify-center gap-1.5">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                    <span>พรีวิวการแบ่งตอน</span>
+                  </button>
+                  <button onclick="addNewChapterToActiveNovel()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition flex items-center justify-center gap-1.5">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    <span>เพิ่มตอนต่อท้ายทันที</span>
+                  </button>
+                </div>
+                <div id="new-chap-preview-container" class="hidden border-t pt-3 space-y-2" style="border-color: var(--border-color)">
+                  <div class="flex items-center justify-between text-[11px]">
+                    <span class="font-bold uppercase tracking-wider" style="color: var(--text-muted)">ตรวจพบ <span id="new-chap-preview-count">0</span> ตอนที่จะเพิ่ม</span>
+                    <span id="new-chap-preview-words" class="font-semibold text-emerald-600">รวม 0 ตัวอักษร</span>
+                  </div>
+                  <div id="new-chap-preview-list" class="max-h-36 overflow-y-auto divide-y text-xs rounded-lg border p-1.5" style="background-color: var(--bg-app); border-color: var(--border-color);"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -820,7 +873,8 @@
       fontSize: 18,
       fontFamily: "sarabun", // "sarabun", "niramit", "charm", "pridi", "mali", "chonburi", "baijamjuree"
       theme: "light",     // "light", "sepia", "dark", "midnight"
-      width: "medium"     // "narrow", "medium", "wide"
+      width: "medium",    // "narrow", "medium", "wide"
+      textAlign: "left"   // "left", "center", "right", "justify"
     };
 
     // --- SAMPLE DATA LOAD ---
@@ -862,21 +916,17 @@
         navigateTo('dashboard');
       }
 
-      // Check URL search params for shared Sync Code
-      const urlParams = new URLSearchParams(window.location.search);
-      const syncPin = urlParams.get('sync');
-      if (syncPin) {
-        setTimeout(() => {
-          if (confirm(`ตรวจพบรหัสซิงค์ข้อมูลผ่านคลาวด์ "${syncPin}" ต้องการดึงข้อมูลนิยายบนเครื่องนี้ทันทีหรือไม่?`)) {
-            navigateTo('settings');
-            document.getElementById('sync-input-pin').value = syncPin;
-            fetchSyncData(syncPin);
-          }
-        }, 800);
-      }
-
       // Add scroll listener to track reading progress in Reader view
       document.getElementById('reader-content-viewport').addEventListener('scroll', trackReadingScrollProgress);
+      window.addEventListener('scroll', () => {
+        const readerView = document.getElementById('view-reader');
+        if (readerView && !readerView.classList.contains('hidden')) {
+          const currentScroll = window.scrollY || document.documentElement.scrollTop;
+          const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+          handleSmartScroll(currentScroll, maxScroll);
+        }
+      });
+      setupReaderTapToggle();
     });
 
     function initLucide() {
@@ -929,6 +979,18 @@
       document.getElementById('view-reader').classList.add('hidden');
       document.getElementById('view-settings').classList.add('hidden');
       document.getElementById('view-manage-novel').classList.add('hidden');
+
+      // Hide main header in reader view, show in other views
+      const mainHeader = document.getElementById('main-header');
+      if (mainHeader) {
+        if (viewId === 'reader') {
+          mainHeader.classList.add('hidden');
+          document.body.classList.add('in-reader-view');
+        } else {
+          mainHeader.classList.remove('hidden');
+          document.body.classList.remove('in-reader-view');
+        }
+      }
 
       // Show requested view
       document.getElementById(`view-${viewId}`).classList.remove('hidden');
@@ -1121,6 +1183,11 @@
       initLucide();
     }
 
+    function formatNumber(num) {
+      const n = Number(num) || 0;
+      return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
     // --- MANAGE NOVEL AND CHAPTERS ---
     function openNovelManager(event, index) {
       if (event) event.stopPropagation();
@@ -1139,6 +1206,8 @@
       // Clear add-chapter fields
       document.getElementById('new-chap-title').value = "";
       document.getElementById('new-chap-content').value = "";
+      const newChapPreview = document.getElementById('new-chap-preview-container');
+      if (newChapPreview) newChapPreview.classList.add('hidden');
       closeChapterEditorBox();
 
       renderManageChaptersList();
@@ -1196,21 +1265,145 @@
       showToast("บันทึกข้อมูลพื้นฐานนิยายเรียบร้อยแล้ว");
     }
 
-    function addNewChapterToActiveNovel() {
-      const title = document.getElementById('new-chap-title').value.trim();
-      const content = document.getElementById('new-chap-content').value.trim();
+    function parseNewChaptersInput() {
+      const manualTitle = document.getElementById('new-chap-title').value.trim();
+      const rawContent = document.getElementById('new-chap-content').value.trim();
+      const splitModeEl = document.getElementById('new-chap-split-keyword');
+      const splitMode = splitModeEl ? splitModeEl.value : 'auto';
+      const novel = NOVELS[ACTIVE_NOVEL_INDEX];
+      const existingCount = (novel && novel.chapters) ? novel.chapters.length : 0;
 
-      if (!title || !content) {
-        alert("กรุณากรอกชื่อตอนและใส่เนื้อหาก่อนเพิ่ม");
+      if (!rawContent) {
+        return [];
+      }
+
+      // 1. Check if rawContent is JSON (array of chapters or novel object)
+      if (rawContent.startsWith('{') || rawContent.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(rawContent);
+          let extracted = [];
+          if (Array.isArray(parsed)) {
+            if (parsed.length > 0 && parsed[0] && parsed[0].content !== undefined) {
+              extracted = parsed;
+            } else {
+              parsed.forEach(n => {
+                if (n && Array.isArray(n.chapters)) extracted.push(...n.chapters);
+              });
+            }
+          } else if (parsed && Array.isArray(parsed.chapters)) {
+            extracted = parsed.chapters;
+          } else if (parsed && Array.isArray(parsed.novels)) {
+            parsed.novels.forEach(n => {
+              if (n && Array.isArray(n.chapters)) extracted.push(...n.chapters);
+            });
+          } else if (parsed && parsed.content !== undefined) {
+            extracted = [parsed];
+          }
+
+          if (extracted.length > 0) {
+            return extracted.map((ch, idx) => ({
+              title: (ch.title && ch.title.trim()) ? ch.title.trim() : (manualTitle || `ตอนที่ ${existingCount + idx + 1}`),
+              content: ch.content || ""
+            })).filter(ch => ch.content.trim() !== "");
+          }
+        } catch (err) {
+          // Fallback to text splitting
+        }
+      }
+
+      // 2. Auto-detect / keyword split across lines
+      const lines = rawContent.split('\n');
+      let chapters = [];
+      let currentTitle = manualTitle || null;
+      let currentParagraphs = [];
+
+      const matchesKeyword = (line) => {
+        if (splitMode === 'auto') {
+          return /^\s*(?:บทที่|ตอนที่|Chapter|ตอน|บท)\s*[\d๑๒๓๔๕๖๗๘๙๐]+/i.test(line);
+        } else if (splitMode === '---') {
+          return line.trim() === '---';
+        } else {
+          return line.toLowerCase().includes(splitMode.toLowerCase());
+        }
+      };
+
+      lines.forEach(line => {
+        const trimmed = line.trim();
+        if (trimmed !== "" && matchesKeyword(trimmed)) {
+          if (currentParagraphs.length > 0) {
+            chapters.push({
+              title: currentTitle || `ตอนที่ ${existingCount + chapters.length + 1}`,
+              content: currentParagraphs.join('\n\n')
+            });
+          }
+          currentTitle = trimmed === '---'
+            ? `ตอนที่ ${existingCount + chapters.length + 1}`
+            : trimmed;
+          currentParagraphs = [];
+        } else if (trimmed !== "") {
+          currentParagraphs.push(trimmed);
+        }
+      });
+
+      if (currentParagraphs.length > 0) {
+        chapters.push({
+          title: currentTitle || `ตอนที่ ${existingCount + chapters.length + 1}`,
+          content: currentParagraphs.join('\n\n')
+        });
+      }
+
+      return chapters;
+    }
+
+    function previewNewChaptersForActiveNovel() {
+      const chapters = parseNewChaptersInput();
+      if (chapters.length === 0) {
+        alert("กรุณาวางเนื้อหาตอนใหม่ก่อนพรีวิว");
+        return;
+      }
+
+      const previewContainer = document.getElementById('new-chap-preview-container');
+      const countSpan = document.getElementById('new-chap-preview-count');
+      const wordsSpan = document.getElementById('new-chap-preview-words');
+      const listDiv = document.getElementById('new-chap-preview-list');
+
+      countSpan.innerText = chapters.length;
+      listDiv.innerHTML = "";
+      let totalChars = 0;
+
+      chapters.forEach(ch => {
+        const len = ch.content.length;
+        totalChars += len;
+        const row = document.createElement('div');
+        row.className = "flex items-center justify-between py-1.5 px-2 gap-2";
+        row.innerHTML = `
+          <span class="font-semibold truncate">${ch.title}</span>
+          <span class="whitespace-nowrap" style="color: var(--text-muted)">${formatNumber(len)} ตัวอักษร</span>
+        `;
+        listDiv.appendChild(row);
+      });
+
+      wordsSpan.innerText = `รวม ${formatNumber(totalChars)} ตัวอักษร`;
+      previewContainer.classList.remove('hidden');
+      showToast(`ตรวจพบ ${chapters.length} ตอนพร้อมเพิ่มต่อท้าย!`);
+    }
+
+    function addNewChapterToActiveNovel() {
+      const chapters = parseNewChaptersInput();
+
+      if (chapters.length === 0) {
+        alert("กรุณาใส่เนื้อหาตอนใหม่ก่อนกดเพิ่ม");
         return;
       }
 
       const novel = NOVELS[ACTIVE_NOVEL_INDEX];
       if (!novel.chapters) novel.chapters = [];
 
-      novel.chapters.push({
-        title: title,
-        content: content
+      chapters.forEach(ch => {
+        novel.chapters.push({
+          title: ch.title,
+          content: ch.content
+        });
       });
 
       saveToLocalStorage();
@@ -1219,7 +1412,14 @@
       // Reset add-chapter fields
       document.getElementById('new-chap-title').value = "";
       document.getElementById('new-chap-content').value = "";
-      showToast(`เพิ่ม "${title}" ต่อท้ายสำเร็จแล้ว!`);
+      const previewContainer = document.getElementById('new-chap-preview-container');
+      if (previewContainer) previewContainer.classList.add('hidden');
+
+      if (chapters.length === 1) {
+        showToast(`เพิ่ม "${chapters[0].title}" ต่อท้ายสำเร็จแล้ว!`);
+      } else {
+        showToast(`เพิ่มตอนใหม่รวดเดียว ${chapters.length} ตอนต่อท้ายสำเร็จแล้ว!`);
+      }
     }
 
     function openChapterEditor(cIndex) {
@@ -1308,13 +1508,89 @@
       });
     }
 
+    let TEMP_IMPORTED_NOVELS = null;
+
+    function handleDirectImportFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('import-raw-content').value = e.target.result || "";
+        parseAndPreviewContent();
+      };
+      reader.readAsText(file);
+    }
+
     function parseAndPreviewContent() {
       const rawText = document.getElementById('import-raw-content').value.trim();
       const splitMode = document.getElementById('import-split-keyword').value;
+      TEMP_IMPORTED_NOVELS = null;
 
       if (!rawText) {
         alert("กรุณาใส่เนื้อหาจาก Google Docs ลงในกล่องข้อความก่อนพรีวิว");
         return;
+      }
+
+      // Support JSON format import directly in the import view
+      if (rawText.startsWith('{') || rawText.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(rawText);
+          let list = [];
+          if (Array.isArray(parsed)) {
+            list = parsed.filter(n => n && Array.isArray(n.chapters));
+          } else if (parsed && Array.isArray(parsed.novels)) {
+            list = parsed.novels.filter(n => n && Array.isArray(n.chapters));
+          } else if (parsed && Array.isArray(parsed.chapters)) {
+            list = [parsed];
+          }
+
+          if (list.length > 0) {
+            TEMP_IMPORTED_NOVELS = list;
+            const first = list[0];
+            if (first.title) document.getElementById('import-title').value = first.title;
+            if (first.author) document.getElementById('import-author').value = first.author;
+            if (first.description !== undefined) document.getElementById('import-description').value = first.description;
+            if (first.coverColor) selectCoverColor(first.coverColor);
+
+            TEMP_PREVIEW_CHAPTERS = first.chapters.map((ch, idx) => ({
+              title: ch.title || `ตอนที่ ${idx + 1}`,
+              content: ch.content || ""
+            }));
+
+            const previewContainer = document.getElementById('parse-preview-container');
+            const parsedList = document.getElementById('parsed-chapters-list');
+            const chapterCountSpan = document.getElementById('parsed-chapter-count');
+            const wordCountSpan = document.getElementById('word-count-preview');
+
+            const allChaptersCount = list.reduce((sum, n) => sum + (n.chapters ? n.chapters.length : 0), 0);
+            chapterCountSpan.innerText = allChaptersCount;
+
+            let totalWords = 0;
+            parsedList.innerHTML = "";
+
+            list.forEach(n => {
+              (n.chapters || []).forEach(ch => {
+                const wordCount = (ch.content || "").length;
+                totalWords += wordCount;
+                const row = document.createElement('div');
+                row.className = "flex justify-between py-2 px-3 hover:bg-black hover:bg-opacity-5 transition";
+                row.innerHTML = `
+                  <span class="font-semibold">${ch.title || 'ไม่มีชื่อตอน'}</span>
+                  <span style="color: var(--text-muted)">${formatNumber(wordCount)} ตัวอักษร</span>
+                `;
+                parsedList.appendChild(row);
+              });
+            });
+
+            wordCountSpan.innerText = `รวมประมาณ ${formatNumber(totalWords)} ตัวอักษร`;
+            previewContainer.classList.remove('hidden');
+            document.getElementById('save-novel-btn').removeAttribute('disabled');
+            showToast("ตรวจพบข้อมูลรูปแบบ JSON สำเร็จ! กดบันทึกเพื่อนำเข้า");
+            return;
+          }
+        } catch (err) {
+          // Fallback to text parsing if not valid JSON
+        }
       }
 
       // Regex matching split keyword
@@ -1516,11 +1792,11 @@
       if (ACTIVE_CHAPTER_INDEX < novel.chapters.length - 1) {
         nextBtn.removeAttribute('disabled');
         nextBtn.style.opacity = "1";
-        nextBtn.innerText = "ตอนต่อไป";
+        nextBtn.innerHTML = `<span>ถัดไป</span> <i data-lucide="chevron-right" class="w-4 h-4"></i>`;
       } else {
         nextBtn.removeAttribute('disabled');
         nextBtn.style.opacity = "1";
-        nextBtn.innerText = "อ่านจบแล้ว";
+        nextBtn.innerHTML = `<span>อ่านจบแล้ว</span>`;
       }
 
       // Refresh Bookmarks
@@ -1560,6 +1836,7 @@
 
     function exitReader() {
       closeReaderOverlays();
+      setReaderHeaderVisibility(true);
       navigateTo('dashboard');
     }
 
@@ -1571,6 +1848,7 @@
       if (panel.classList.contains('hidden')) {
         panel.classList.remove('hidden');
         overlay.classList.remove('hidden');
+        initLucide();
       } else {
         panel.classList.add('hidden');
         overlay.classList.add('hidden');
@@ -1601,6 +1879,12 @@
     // Width setup
     function changeReaderWidth(width) {
       READING_SETTINGS.width = width;
+      applyReadingSettings();
+      saveToLocalStorage();
+    }
+
+    function changeTextAlign(align) {
+      READING_SETTINGS.textAlign = align;
       applyReadingSettings();
       saveToLocalStorage();
     }
@@ -1638,6 +1922,32 @@
       } else {
         viewport.classList.add('px-5', 'md:px-12', 'max-w-4xl', 'mx-auto');
       }
+
+      // Text alignment
+      const paras = document.getElementById('reader-paragraphs');
+      if (paras) {
+        paras.style.textAlign = READING_SETTINGS.textAlign || 'left';
+      }
+
+      // UI button align feedback
+      const alignBtns = {
+        left: document.getElementById('align-btn-left'),
+        center: document.getElementById('align-btn-center'),
+        right: document.getElementById('align-btn-right'),
+        justify: document.getElementById('align-btn-justify')
+      };
+
+      Object.keys(alignBtns).forEach(key => {
+        const btn = alignBtns[key];
+        if (btn) {
+          if (key === (READING_SETTINGS.textAlign || 'left')) {
+            btn.className = "py-1.5 rounded border bg-blue-600 text-white flex flex-col items-center justify-center gap-0.5 font-medium transition shadow-sm";
+          } else {
+            btn.className = "py-1.5 rounded border flex flex-col items-center justify-center gap-0.5 font-medium transition";
+            btn.style.borderColor = "var(--border-color)";
+          }
+        }
+      });
 
       // UI button width feedback
       const widthBtns = {
@@ -1694,12 +2004,135 @@
       }
     }
 
+    let lastScrollTop = 0;
+    let scrollTimeout = null;
+    let isHeaderHidden = false;
+
+    function setReaderHeaderVisibility(show) {
+      const header = document.getElementById('reader-controls-header');
+      if (!header) return;
+
+      // Do not hide header if settings panel or TOC is open
+      const panel = document.getElementById('reader-settings-panel');
+      const toc = document.getElementById('toc-sidebar');
+      const isPanelOpen = panel && !panel.classList.contains('hidden');
+      const isTOCOpen = toc && !toc.classList.contains('translate-x-full');
+
+      if (!show && (isPanelOpen || isTOCOpen)) {
+        return;
+      }
+
+      if (show) {
+        header.classList.remove('-translate-y-full');
+        isHeaderHidden = false;
+      } else {
+        header.classList.add('-translate-y-full');
+        isHeaderHidden = true;
+      }
+    }
+
+    function toggleReaderHeader() {
+      setReaderHeaderVisibility(isHeaderHidden);
+    }
+
+    function handleSmartScroll(currentScroll, maxScroll) {
+      const scrollControls = document.getElementById('reader-scroll-controls');
+
+      // If scrolled near top (< 50px), always show header
+      if (currentScroll < 50) {
+        setReaderHeaderVisibility(true);
+      } else if (currentScroll > lastScrollTop + 10) {
+        // Scrolling DOWN -> hide header & hide scroll buttons for distraction-free reading
+        setReaderHeaderVisibility(false);
+        if (scrollControls) {
+          scrollControls.classList.add('opacity-0', 'pointer-events-none');
+          scrollControls.classList.remove('opacity-70');
+        }
+      } else if (currentScroll < lastScrollTop - 10) {
+        // Scrolling UP -> reveal header & reveal scroll buttons
+        setReaderHeaderVisibility(true);
+        if (scrollControls && maxScroll > 150) {
+          scrollControls.classList.remove('opacity-0', 'pointer-events-none');
+          scrollControls.classList.add('opacity-70');
+        }
+      }
+
+      lastScrollTop = currentScroll;
+
+      // Also reveal scroll buttons if stopped scrolling for a moment
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        if (scrollControls && currentScroll > 100 && maxScroll > 150) {
+          scrollControls.classList.remove('opacity-0', 'pointer-events-none');
+          scrollControls.classList.add('opacity-70');
+        }
+      }, 1000);
+    }
+
+    function setupReaderTapToggle() {
+      const viewport = document.getElementById('reader-content-viewport');
+      if (!viewport) return;
+
+      let touchStartY = 0;
+      let touchStartTime = 0;
+
+      viewport.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+          touchStartY = e.touches[0].clientY;
+          touchStartTime = Date.now();
+        }
+      }, { passive: true });
+
+      viewport.addEventListener('touchend', (e) => {
+        const touchDuration = Date.now() - touchStartTime;
+        if (touchDuration < 280 && e.changedTouches.length === 1) {
+          const moveY = Math.abs(e.changedTouches[0].clientY - touchStartY);
+          if (moveY < 12) {
+            if (!e.target.closest('button') && !e.target.closest('input') && !e.target.closest('select')) {
+              const selection = window.getSelection();
+              if (!selection || selection.toString().length === 0) {
+                toggleReaderHeader();
+              }
+            }
+          }
+        }
+      }, { passive: true });
+
+      viewport.addEventListener('click', (e) => {
+        if (!e.target.closest('button') && !e.target.closest('input') && !e.target.closest('select')) {
+          const selection = window.getSelection();
+          if (!selection || selection.toString().length === 0) {
+            const currentScroll = viewport.scrollTop || window.scrollY || document.documentElement.scrollTop;
+            if (currentScroll > 50) {
+              toggleReaderHeader();
+            }
+          }
+        }
+      });
+    }
+
+    function scrollToTop() {
+      const viewport = document.getElementById('reader-content-viewport');
+      if (viewport && viewport.scrollHeight > viewport.clientHeight) {
+        viewport.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function scrollToBottom() {
+      const viewport = document.getElementById('reader-content-viewport');
+      if (viewport && viewport.scrollHeight > viewport.clientHeight) {
+        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+      }
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+    }
+
     function trackReadingScrollProgress() {
       const viewport = document.getElementById('reader-content-viewport');
       const totalScrollHeight = viewport.scrollHeight - viewport.clientHeight;
+      const currentScroll = viewport.scrollTop;
       
       if (totalScrollHeight > 0) {
-        const currentScroll = viewport.scrollTop;
         const progressPercent = Math.min(100, Math.max(0, (currentScroll / totalScrollHeight) * 100));
         
         document.getElementById('reading-progress-bar').style.width = `${progressPercent}%`;
@@ -1710,6 +2143,8 @@
           saveToLocalStorage();
         }
       }
+
+      handleSmartScroll(currentScroll, totalScrollHeight);
     }
 
     // --- TABLE OF CONTENTS (TOC) ---
@@ -1760,97 +2195,6 @@
       });
 
       initLucide();
-    }
-
-    // --- CLOUD SYNC BRIDGE (SERVERLESS CROSS-DEVICE) ---
-    // Using npoint.io - a highly reliable, free anonymous JSON storage with excellent CORS support
-    const SYNC_API_URL = "about:invalid#zPythonSafez";
-
-    function generateSyncCode() {
-      const syncResultDiv = document.getElementById('sync-send-result');
-      const pinDisplay = document.getElementById('sync-pin-display');
-      const qrContainer = document.getElementById('sync-qr-container');
-
-      syncResultDiv.classList.remove('hidden');
-      pinDisplay.innerText = "กำลังอัปโหลด...";
-      qrContainer.innerHTML = `<div class="text-xs text-gray-400 py-4">กำลังสร้าง QR Code...</div>`;
-
-      const payload = {
-        novels: NOVELS,
-        timestamp: Date.now()
-      };
-
-      fetch(SYNC_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: JSON.stringify(payload) })
-      })
-      .then(res => {
-        if (!res.ok) throw new Error("Server error");
-        return res.json();
-      })
-      .then(data => {
-        if (data && data.id) {
-          const pin = data.id.toUpperCase();
-          pinDisplay.innerText = pin;
-          
-          // Generate QR Code that auto-fills this Sync PIN
-          const appUrl = window.location.origin + window.location.pathname + '?sync=' + pin;
-          qrContainer.innerHTML = `<img src="about:invalid#zPythonSafez" alt="Sync QR" class="shadow-md rounded-lg">`;
-          showToast("อัปโหลดข้อมูลสำหรับการซิงค์สำเร็จ!");
-        } else {
-          throw new Error("Invalid response");
-        }
-      })
-      .catch(err => {
-        pinDisplay.innerText = "ข้อผิดพลาด";
-        qrContainer.innerHTML = "";
-        alert("เนื่องจากระบบพรีวิวในแชทนี้มีระบบความปลอดภัยที่เข้มงวด (Sandbox Iframe) บริการซิงค์ภายนอกอาจถูกจำกัดในการพรีวิว\n\nแนะนำให้กด 'ดาวน์โหลดไฟล์สำรองข้อมูล (.json)' หรือกด 'Download แอปไปรันเดี่ยวๆ บนเครื่อง' เพื่อใช้งานระบบซิงค์คลาวด์ได้อย่างราบรื่น 100% ครับ!");
-        console.error(err);
-      });
-    }
-
-    function fetchSyncData(pinOverride = null) {
-      let pin = pinOverride || document.getElementById('sync-input-pin').value.trim();
-
-      if (!pin) {
-        alert("กรุณากรอกรหัสซิงค์ให้ถูกต้อง");
-        return;
-      }
-
-      showToast("กำลังดาวน์โหลดข้อมูล...");
-
-      fetch(`about:invalid#zPythonSafez`)
-      .then(res => {
-        if (!res.ok) {
-          throw new Error("ไม่พบรหัสซิงค์นี้ หรือรหัสหมดอายุแล้ว");
-        }
-        return res.json();
-      })
-      .then(data => {
-        if (data && data.contents) {
-          const parsedPayload = JSON.parse(data.contents);
-          if (parsedPayload && Array.isArray(parsedPayload.novels)) {
-            NOVELS = parsedPayload.novels;
-            saveToLocalStorage();
-            renderDashboard();
-            navigateTo('dashboard');
-            
-            // Clear URL parameter so it doesn't prompt again
-            window.history.replaceState({}, document.title, window.location.pathname);
-            
-            showToast("ซิงค์ดึงข้อมูลข้ามอุปกรณ์สำเร็จ!");
-          } else {
-            throw new Error("ข้อมูลนิยายไม่ถูกต้อง");
-          }
-        } else {
-          throw new Error("ไม่พบเนื้อหาในระบบคลาวด์");
-        }
-      })
-      .catch(err => {
-        alert(err.message || "ไม่สามารถเชื่อมต่อคลาวด์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต");
-        console.error(err);
-      });
     }
 
     // --- SYSTEM SETTINGS VIEW ---
@@ -1908,6 +2252,41 @@
       showToast("ดาวน์โหลดไฟล์สำรองข้อมูลสำเร็จ");
     }
 
+    function mergeImportedNovels(incomingNovels) {
+      incomingNovels.forEach(inc => {
+        if (!inc || !Array.isArray(inc.chapters)) return;
+        const existingIndex = NOVELS.findIndex(n => (inc.id && n.id === inc.id) || (inc.title && n.title === inc.title));
+        if (existingIndex !== -1) {
+          const existing = NOVELS[existingIndex];
+          existing.author = inc.author || existing.author;
+          existing.description = inc.description !== undefined ? inc.description : existing.description;
+          existing.coverColor = inc.coverColor || existing.coverColor;
+          const existingTitles = new Set((existing.chapters || []).map(c => c.title));
+          inc.chapters.forEach(ch => {
+            if (!existingTitles.has(ch.title)) {
+              existing.chapters.push(ch);
+            } else {
+              const chIdx = existing.chapters.findIndex(c => c.title === ch.title);
+              if (chIdx !== -1) existing.chapters[chIdx] = ch;
+            }
+          });
+        } else {
+          NOVELS.push({
+            id: inc.id || ('novel_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)),
+            title: inc.title || "นิยายนำเข้า",
+            author: inc.author || "ไม่ระบุนามปากกา",
+            description: inc.description || "",
+            coverColor: inc.coverColor || "blue",
+            createdAt: inc.createdAt || new Date().toISOString(),
+            lastReadChapter: inc.lastReadChapter || 0,
+            lastReadProgress: inc.lastReadProgress || 0,
+            bookmarks: Array.isArray(inc.bookmarks) ? inc.bookmarks : [],
+            chapters: inc.chapters
+          });
+        }
+      });
+    }
+
     function importDatabase(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -1916,11 +2295,20 @@
       reader.onload = function(e) {
         try {
           const imported = JSON.parse(e.target.result);
-          if (imported.novels && Array.isArray(imported.novels)) {
-            NOVELS = imported.novels;
+          let list = [];
+          if (Array.isArray(imported)) {
+            list = imported;
+          } else if (imported && Array.isArray(imported.novels)) {
+            list = imported.novels;
             if (imported.pinSetting) {
               PIN_SETTING = imported.pinSetting;
             }
+          } else if (imported && Array.isArray(imported.chapters)) {
+            list = [imported];
+          }
+
+          if (list.length > 0) {
+            mergeImportedNovels(list);
             saveToLocalStorage();
             renderDashboard();
             navigateTo('dashboard');
@@ -1931,6 +2319,7 @@
         } catch (error) {
           alert("เกิดข้อผิดพลาดในการอ่านไฟล์ กรุณาลองใหม่อีกครั้ง");
         }
+        event.target.value = "";
       };
       reader.readAsText(file);
     }
