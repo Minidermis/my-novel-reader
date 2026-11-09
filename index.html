@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Private Novel Reader - โปรแกรมอ่านนิยายส่วนตัว</title>
+  <!-- Tailwind CSS CDN for modern styled components -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons for clean icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&family=Charm:wght@400;700&family=Niramit:wght@300;400;500;600;700&family=Mali:wght@300;400;500;600;700&family=Pridi:wght@300;400;500;600;700&family=Chonburi&family=Bai+Jamjuree:wght@300;400;500;600;700&display=swap');
+    
+    :root {
+      --font-thai: 'Sarabun', sans-serif;
+      --font-novel-sarabun: 'Sarabun', sans-serif;
+      --font-novel-niramit: 'Niramit', sans-serif;
+      --font-novel-charm: 'Charm', serif;
+      --font-novel-pridi: 'Pridi', serif;
+      --font-novel-mali: 'Mali', cursive;
+      --font-novel-chonburi: 'Chonburi', serif;
+      --font-novel-baijamjuree: 'Bai Jamjuree', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-thai);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    /* Custom Themes styling */
+    .theme-light {
+      --bg-app: #f3f4f6;
+      --bg-card: #ffffff;
+      --border-color: #e5e7eb;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --reader-bg: #ffffff;
+      --reader-text: #111827;
+    }
+
+    .theme-sepia {
+      --bg-app: #efe7d5;
+      --bg-card: #f9f3e6;
+      --border-color: #e1d5ba;
+      --text-main: #4a3e2e;
+      --text-muted: #7d6b55;
+      --accent: #b45309;
+      --accent-hover: #92400e;
+      --reader-bg: #fdf6e3;
+      --reader-text: #5b4636;
+    }
+
+    .theme-dark {
+      --bg-app: #111827;
+      --bg-card: #1f2937;
+      --border-color: #374151;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent: #3b82f6;
+      --accent-hover: #60a5fa;
+      --reader-bg: #1f2937;
+      --reader-text: #f9fafb;
+    }
+
+    .theme-midnight {
+      --bg-app: #030712;
+      --bg-card: #0b0f19;
+      --border-color: #1f2937;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --accent: #8b5cf6;
+      --accent-hover: #a78bfa;
+      --reader-bg: #090d16;
+      --reader-text: #e5e7eb;
+    }
+
+    /* Apply CSS variables */
+    .app-container {
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+    
+    .novel-reader-body {
+      background-color: var(--reader-bg) !important;
+      color: var(--reader-text) !important;
+    }
+
+    /* Hide scrollbar but keep functionality */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Progress bar smooth transition */
+    .progress-bar {
+      transition: width 0.1s ease-out;
+    }
+
+    /* Focus visible outline */
+    *:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body class="theme-light">
+  
+  <div class="app-container flex flex-col min-height-screen antialiased select-none md:select-text">
+
+    <!-- PASSWORD / PIN SHIELD (Local Privacy Feature) -->
+    <div id="pin-screen" class="fixed inset-0 bg-slate-900 text-white z-50 flex flex-col justify-center items-center px-6 hidden">
+      <div class="max-w-md w-full text-center space-y-8">
+        <div class="flex flex-col items-center">
+          <div class="p-4 bg-blue-600 rounded-full mb-4 shadow-lg shadow-blue-500/30">
+            <i data-lucide="lock" class="w-8 h-8"></i>
+          </div>
+          <h2 class="text-2xl font-bold tracking-wide">Private Novel Reader</h2>
+          <p class="text-slate-400 text-sm mt-2">โปรแกรมอ่านนิยายส่วนตัวของคุณ กรอกรหัส PIN เพื่อเข้าใช้งาน</p>
+        </div>
+        
+        <div class="space-y-4">
+          <div class="flex justify-center gap-3">
+            <div id="dot-1" class="w-4 h-4 rounded-full border border-slate-600 transition-all duration-150"></div>
+            <div id="dot-2" class="w-4 h-4 rounded-full border border-slate-600 transition-all duration-150"></div>
+            <div id="dot-3" class="w-4 h-4 rounded-full border border-slate-600 transition-all duration-150"></div>
+            <div id="dot-4" class="w-4 h-4 rounded-full border border-slate-600 transition-all duration-150"></div>
+          </div>
+          <p id="pin-error" class="text-rose-400 text-sm font-medium h-5 opacity-0 transition-opacity">รหัส PIN ไม่ถูกต้อง ลองอีกครั้ง</p>
+        </div>
+
+        <!-- Touch / Click PIN Pad -->
+        <div class="grid grid-cols-3 gap-4 max-w-xs mx-auto">
+          <button onclick="pressPin('1')" class="py-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-xl text-2xl font-semibold transition">1</button>
+          <button onclick="pressPin('2')" class="py-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-xl text-2xl font-semibold transition">2</button>
+          <button onclick="pressPin('3')" class="py-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-xl text-2xl font-semibold transition">3</button>
+          <button onclick="pressPin('4')" class="py-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-xl text-2xl font-semibold transition">4</button>
+          <button onclick="pressPin('5')" class="py-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-xl text-2xl font-semibold transition">5</button>
+          <button onclick="pressPin('6')" class="py-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-xl text-2xl font-semibold transition">6</button>
+          <button onclick="pressPin('7')" class="py-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-xl text-2xl font-semibold transition">7</button>
+          <button onclick="pressPin('8')" class="py-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-xl text-2xl font-semibold transition">8</button>
+          <button onclick="pressPin('9')" class="py-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-xl text-2xl font-semibold transition">9</button>
+          <button onclick="clearPin()" class="py-4 text-slate-400 hover:text-white rounded-xl text-lg font-medium transition">ล้าง</button>
+          <button onclick="pressPin('0')" class="py-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-xl text-2xl font-semibold transition">0</button>
+          <button onclick="backspacePin()" class="py-4 text-slate-400 hover:text-white rounded-xl flex items-center justify-center transition">
+            <i data-lucide="delete" class="w-6 h-6"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN HEADER -->
+    <header class="border-b shadow-sm sticky top-0 z-30 transition-colors" style="background-color: var(--bg-card); border-color: var(--border-color);">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateTo('dashboard')">
+          <div class="p-2 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl shadow-md">
+            <i data-lucide="book-open" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold tracking-tight">Private Reader</h1>
+            <p class="text-xs text-gray-500 font-medium">อ่านนิยายส่วนตัวแบบออฟไลน์</p>
+          </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <nav class="flex items-center space-x-1 md:space-x-2">
+          <button onclick="navigateTo('dashboard')" class="p-2 hover:bg-opacity-10 hover:bg-black rounded-lg transition text-sm flex items-center gap-1.5 font-medium" title="ชั้นหนังสือ">
+            <i data-lucide="library" class="w-5 h-5"></i>
+            <span class="hidden md:inline">ชั้นหนังสือ</span>
+          </button>
+          <button onclick="navigateTo('import')" class="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-sm flex items-center gap-1.5 font-medium" title="นำเข้านิยาย">
+            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+            <span>นำเข้าเนื้อหา</span>
+          </button>
+          <button onclick="navigateTo('settings')" class="p-2 hover:bg-opacity-10 hover:bg-black rounded-lg transition text-sm flex items-center gap-1.5 font-medium" title="การตั้งค่า">
+            <i data-lucide="settings" class="w-5 h-5"></i>
+            <span class="hidden md:inline">ตั้งค่าความเป็นส่วนตัว</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <!-- CONTENT WRAPPER -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-6">
+
+      <!-- ================= SECTION 1: DASHBOARD (LIBRARY) ================= -->
+      <section id="view-dashboard" class="space-y-6">
+        <!-- Privacy Info Banner -->
+        <div class="p-4 rounded-xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-colors" style="background-color: var(--bg-card); border-color: var(--border-color);">
+          <div class="flex gap-3">
+            <div class="p-2.5 bg-emerald-500/10 text-emerald-600 rounded-xl flex-shrink-0">
+              <i data-lucide="shield-check" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h3 class="font-semibold text-sm md:text-base">ระบบเก็บข้อมูลแบบส่วนตัว 100% (Privacy Guaranteed)</h3>
+              <p class="text-xs md:text-sm" style="color: var(--text-muted)">
+                เนื้อหาและนิยายของคุณจะไม่ถูกส่งไปยังเซิร์ฟเวอร์ใดๆ ทุกอย่างบันทึกแบบ Local อยู่ในเบราว์เซอร์ของอุปกรณ์เครื่องนี้เท่านั้น ปลอดภัย ไร้กังวล
+              </p>
+            </div>
+          </div>
+          <span class="text-xs px-2.5 py-1 bg-emerald-500/10 text-emerald-600 rounded-full font-semibold whitespace-nowrap">Local Database</span>
+        </div>
+
+        <!-- Quick Stats / Reading History -->
+        <div id="reading-history-container" class="space-y-3 hidden">
+          <h2 class="text-sm font-bold uppercase tracking-wider" style="color: var(--text-muted)">อ่านล่าสุด</h2>
+          <div id="history-card" class="p-4 rounded-xl border flex items-center justify-between transition-all hover:shadow-md cursor-pointer" style="background-color: var(--bg-card); border-color: var(--border-color);">
+            <div class="flex items-center gap-3">
+              <div class="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-xl">
+                <i data-lucide="bookmark" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <h4 id="history-title" class="font-bold text-base">ชื่อนิยายล่าสุด</h4>
+                <p id="history-details" class="text-xs" style="color: var(--text-muted)">บทที่ 1 • อ่านไปแล้ว 45%</p>
+              </div>
+            </div>
+            <button id="history-resume-btn" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg text-xs hover:bg-blue-700 transition flex items-center gap-1.5">
+              <span>อ่านต่อ</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Novel Grid List -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xl font-bold flex items-center gap-2">
+              <i data-lucide="book" class="w-5 h-5 text-blue-600"></i>
+              <span>ชั้นหนังสือของคุณ</span>
+            </h2>
+            <div class="flex items-center gap-2">
+              <span id="novel-count-badge" class="text-xs px-2.5 py-1 rounded-full font-bold" style="background-color: var(--border-color);">0 เรื่อง</span>
+            </div>
+          </div>
+
+          <!-- Empty State (No Novels Loaded yet) -->
+          <div id="library-empty-state" class="p-12 text-center rounded-2xl border flex flex-col items-center justify-center space-y-4 transition-colors" style="background-color: var(--bg-card); border-color: var(--border-color);">
+            <div class="p-5 bg-blue-50 dark:bg-slate-800 text-blue-600 rounded-full">
+              <i data-lucide="file-text" class="w-12 h-12"></i>
+            </div>
+            <div class="space-y-1.5 max-w-sm">
+              <h3 class="font-bold text-lg">ยังไม่มีนิยายในชั้นหนังสือของคุณ</h3>
+              <p class="text-xs" style="color: var(--text-muted)">คัดลอกเนื้อหาจาก Google Docs แล้วกดปุ่มนำเข้าเพื่อสร้างนิยายเรื่องแรกของคุณได้ง่ายๆ เลย!</p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2 pt-2">
+              <button onclick="navigateTo('import')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>สร้างนิยายใหม่</span>
+              </button>
+              <button onclick="loadSampleNovel()" class="px-5 py-2.5 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2" style="background-color: var(--border-color); color: var(--text-main);">
+                <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+                <span>โหลดเรื่องตัวอย่าง</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Grid of Novels -->
+          <div id="library-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Dynamically populated novel cards will go here -->
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ================= SECTION 2: IMPORT/ADD NOVEL ================= -->
+      <section id="view-import" class="space-y-6 hidden">
+        <div class="flex items-center gap-2 cursor-pointer text-sm font-semibold hover:opacity-85" onclick="navigateTo('dashboard')" style="color: var(--accent);">
+          <i data-lucide="chevron-left" class="w-4 h-4"></i>
+          <span>กลับไปชั้นหนังสือ</span>
+        </div>
+
+        <div class="space-y-1">
+          <h2 class="text-2xl font-bold flex items-center gap-2">
+            <i data-lucide="import" class="w-6 h-6 text-blue-600"></i>
+            <span>นำเข้าเนื้อหานิยายจาก Google Doc</span>
+          </h2>
+          <p class="text-xs" style="color: var(--text-muted)">นำเนื้อหาจาก Google Docs ของคุณมาคัดลอกวาง เพื่อแปลงเป็นหนังสือที่แบ่งบทให้อัตโนมัติและปรับแต่งเพื่อการอ่านบนมือถือได้ลงตัวที่สุด</p>
+        </div>
+
+        <!-- Import Form & Settings -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Novel details input -->
+          <div class="space-y-6 lg:col-span-1">
+            <div class="p-5 rounded-2xl border space-y-4" style="background-color: var(--bg-card); border-color: var(--border-color);">
+              <h3 class="font-bold text-base border-b pb-2 flex items-center gap-2" style="border-color: var(--border-color)">
+                <i data-lucide="info" class="w-4 h-4 text-blue-600"></i>
+                <span>รายละเอียดข้อมูลนิยาย</span>
+              </h3>
+              
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-xs font-bold uppercase mb-1 tracking-wider" style="color: var(--text-muted)">ชื่อเรื่อง *</label>
+                  <input type="text" id="import-title" placeholder="เช่น ยุทธภพมหัศจรรย์, รักในฤดูร้อน" class="w-full px-3 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:outline-none bg-transparent" style="border-color: var(--border-color)">
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold uppercase mb-1 tracking-wider" style="color: var(--text-muted)">นามปากกา / ผู้แต่ง</label>
+                  <input type="text" id="import-author" placeholder="เช่น นามปากกาของคุณ" class="w-full px-3 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:outline-none bg-transparent" style="border-color: var(--border-color)">
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold uppercase mb-1 tracking-wider" style="color: var(--text-muted)">คำโปรย / คำอธิบาย</label>
+                  <textarea id="import-description" placeholder="เรื่องย่อแบบกระชับ..." rows="3" class="w-full px-3 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:outline-none bg-transparent text-sm" style="border-color: var(--border-color)"></textarea>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold uppercase mb-1.5 tracking-wider" style="color: var(--text-muted)">โทนสีของหน้าปก</label>
+                  <div class="grid grid-cols-4 gap-2">
+                    <button onclick="selectCoverColor('blue')" class="color-picker-btn h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 border-2 border-white ring-2 ring-blue-500" data-color="blue"></button>
+                    <button onclick="selectCoverColor('amber')" class="color-picker-btn h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 border-2 border-transparent hover:border-white transition" data-color="amber"></button>
+                    <button onclick="selectCoverColor('emerald')" class="color-picker-btn h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 border-2 border-transparent hover:border-white transition" data-color="emerald"></button>
+                    <button onclick="selectCoverColor('purple')" class="color-picker-btn h-9 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 border-2 border-transparent hover:border-white transition" data-color="purple"></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Helpful tips -->
+            <div class="p-4 rounded-xl border text-xs space-y-2.5" style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-muted);">
+              <h4 class="font-bold flex items-center gap-1.5 text-xs text-blue-600">
+                <i data-lucide="help-circle" class="w-4 h-4"></i>
+                <span>วิธีคัดลอกจาก Google Docs</span>
+              </h4>
+              <ol class="list-decimal pl-4 space-y-1.5">
+                <li>เปิด Google Doc หรือไฟล์งานเขียนนิยายของคุณ</li>
+                <li>กดเลือกทั้งหมด <kbd class="px-1 py-0.5 bg-gray-200 dark:bg-slate-700 rounded">Ctrl + A</kbd> (หรือ <kbd class="px-1 py-0.5 bg-gray-200 dark:bg-slate-700 rounded">⌘ + A</kbd>)</li>
+                <li>กดคัดลอกแล้วนำมาวางในช่องขวามือ</li>
+                <li>ระบบจะตรวจจับคำว่า <strong>"บทที่"</strong>, <strong>"ตอนที่"</strong> หรือ <strong>"Chapter"</strong> เพื่อแยกบทให้อัตโนมัติ!</li>
+              </ol>
+            </div>
+          </div>
+
+          <!-- Editor / Text area for content -->
+          <div class="space-y-6 lg:col-span-2">
+            <div class="p-5 rounded-2xl border space-y-4 flex flex-col h-full" style="background-color: var(--bg-card); border-color: var(--border-color);">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-2" style="border-color: var(--border-color)">
+                <h3 class="font-bold text-base flex items-center gap-2">
+                  <i data-lucide="text-quote" class="w-5 h-5 text-blue-600"></i>
+                  <span>วางเนื้อหานิยายที่ต้องการนำเข้า</span>
+                </h3>
+                
+                <!-- Split mode settings -->
+                <div class="flex items-center gap-2 text-xs">
+                  <span class="font-medium text-gray-500">แยกบทด้วยคำว่า:</span>
+                  <select id="import-split-keyword" class="px-2 py-1 rounded border bg-transparent font-medium" style="border-color: var(--border-color)">
+                    <option value="auto">ตรวจจับอัตโนมัติ</option>
+                    <option value="บทที่">บทที่</option>
+                    <option value="ตอนที่">ตอนที่</option>
+                    <option value="Chapter">Chapter</option>
+                    <option value="---">สัญลักษณ์ "---"</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Main Content Input -->
+              <div class="space-y-2 flex-grow">
+                <textarea id="import-raw-content" placeholder="คัดลอกเนื้อหาทั้งหมดใน Google Docs ของคุณ แล้วมาวางที่นี่ได้เลย..." class="w-full h-80 lg:h-96 px-4 py-3 rounded-xl border focus:ring-2 focus:ring-blue-500 focus:outline-none bg-transparent text-sm leading-relaxed" style="border-color: var(--border-color)"></textarea>
+              </div>
+
+              <!-- Parse Actions -->
+              <div class="flex flex-col sm:flex-row gap-3 justify-end pt-2">
+                <button onclick="parseAndPreviewContent()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2">
+                  <i data-lucide="sparkles" class="w-4 h-4"></i>
+                  <span>พรีวิวและตรวจสอบบทเรียน</span>
+                </button>
+                <button onclick="saveImportedNovel()" id="save-novel-btn" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition flex items-center justify-center gap-2" disabled>
+                  <i data-lucide="save" class="w-4 h-4"></i>
+                  <span>บันทึกนิยายลงชั้นหนังสือ</span>
+                </button>
+              </div>
+
+              <!-- Live Preview of Parsed Chapters -->
+              <div id="parse-preview-container" class="hidden border-t pt-4 mt-2 space-y-3" style="border-color: var(--border-color)">
+                <div class="flex items-center justify-between">
+                  <h4 class="text-xs font-bold uppercase tracking-wider" style="color: var(--text-muted)">ผลการแบ่งบท (<span id="parsed-chapter-count">0</span> ตอนที่พบ)</h4>
+                  <span id="word-count-preview" class="text-xs font-semibold text-emerald-600">รวม 0 คำ</span>
+                </div>
+                <div id="parsed-chapters-list" class="max-h-48 overflow-y-auto divide-y text-xs rounded-xl border p-2" style="background-color: var(--bg-app); border-color: var(--border-color);">
+                  <!-- Dinamically generated list of chapters -->
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+
+      <!-- ================= SECTION 3: IMMERSIVE READER VIEW ================= -->
+      <section id="view-reader" class="hidden">
+        
+        <!-- Reader Container with customizable width and font -->
+        <div class="max-w-3xl mx-auto flex flex-col min-h-screen">
+          
+          <!-- Top Control Header (Sticky-ish, hides/reveals based on user action) -->
+          <div id="reader-controls-header" class="fixed top-0 inset-x-0 z-40 border-b shadow-sm transition-transform duration-300" style="background-color: var(--bg-card); border-color: var(--border-color);">
+            <div class="max-w-3xl mx-auto px-4 py-2.5 flex items-center justify-between">
+              
+              <div class="flex items-center gap-2">
+                <button onclick="exitReader()" class="p-2 hover:bg-opacity-10 hover:bg-black rounded-lg transition" title="กลับหน้าแรก">
+                  <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </button>
+                <div>
+                  <h3 id="reader-novel-title" class="font-bold text-xs md:text-sm line-clamp-1">ชื่อเรื่องนิยาย</h3>
+                  <p id="reader-chapter-title-header" class="text-[10px] md:text-xs" style="color: var(--text-muted)">บทที่ 1</p>
+                </div>
+              </div>
+
+              <!-- Quick Reading Setting Buttons -->
+              <div class="flex items-center space-x-1.5">
+                <button onclick="toggleReaderMenu()" class="p-2 hover:bg-opacity-10 hover:bg-black rounded-lg transition" title="ปรับแต่งอักษรและหน้าจอ">
+                  <i data-lucide="type" class="w-5 h-5"></i>
+                </button>
+                <button onclick="toggleBookmark()" class="p-2 hover:bg-opacity-10 hover:bg-black rounded-lg transition" title="บุ๊กมาร์กหน้านี้">
+                  <i id="bookmark-icon" data-lucide="bookmark" class="w-5 h-5"></i>
+                </button>
+                <button onclick="toggleTOC()" class="p-2 hover:bg-opacity-10 hover:bg-black rounded-lg transition" title="สารบัญ">
+                  <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+              </div>
+
+            </div>
+
+            <!-- Reading Progress indicator bar -->
+            <div class="w-full bg-gray-200 dark:bg-gray-800 h-1">
+              <div id="reading-progress-bar" class="bg-blue-600 h-1 progress-bar" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <!-- SIDEBAR: Table of Contents (TOC) Modal/Drawer -->
+          <div id="toc-sidebar" class="fixed inset-y-0 right-0 z-50 w-80 shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 border-l" style="background-color: var(--bg-card); border-color: var(--border-color);">
+            <div class="p-4 border-b flex items-center justify-between" style="border-color: var(--border-color)">
+              <h3 class="font-bold text-base flex items-center gap-2">
+                <i data-lucide="list" class="w-5 h-5 text-blue-600"></i>
+                <span>สารบัญบทเรียน</span>
+              </h3>
+              <button onclick="toggleTOC()" class="p-1.5 hover:bg-opacity-10 hover:bg-black rounded-lg transition">
+                <i data-lucide="x" class="w-5 h-5"></i>
+              </button>
+            </div>
+            <div id="toc-chapters-list" class="flex-grow overflow-y-auto divide-y" style="border-color: var(--border-color)">
+              <!-- Dynamically populated TOC list -->
+            </div>
+            <div class="p-4 border-t text-xs text-center" style="border-color: var(--border-color); color: var(--text-muted)">
+              มีทั้งหมด <span id="toc-total-chapters">0</span> ตอน
+            </div>
+          </div>
+
+          <!-- OVERLAY FOR SIDEBAR / SETTINGS -->
+          <div id="reader-overlay" onclick="closeReaderOverlays()" class="fixed inset-0 bg-black/40 z-40 hidden transition-opacity duration-300"></div>
+
+          <!-- FLOATING SETTINGS MENU PANEL (Type / Theme customization) -->
+          <div id="reader-settings-panel" class="fixed right-4 top-16 z-50 p-4 rounded-2xl shadow-xl w-72 space-y-4 border hidden" style="background-color: var(--bg-card); border-color: var(--border-color);">
+            <div class="flex items-center justify-between border-b pb-2" style="border-color: var(--border-color)">
+              <h4 class="font-bold text-sm">การตั้งค่ามุมมองการอ่าน</h4>
+              <button onclick="toggleReaderMenu()" class="text-xs text-gray-500 hover:text-black">ปิด</button>
+            </div>
+
+            <!-- Font Sizes -->
+            <div class="space-y-2">
+              <label class="block text-[10px] font-bold uppercase tracking-wider" style="color: var(--text-muted)">ขนาดตัวอักษร</label>
+              <div class="flex items-center justify-between gap-2">
+                <button onclick="adjustFontSize(-2)" class="px-3 py-1.5 rounded-lg border text-xs font-semibold flex-1 text-center" style="background-color: var(--bg-app); border-color: var(--border-color)">ก-</button>
+                <span id="current-font-size-label" class="text-sm font-bold">18px</span>
+                <button onclick="adjustFontSize(2)" class="px-3 py-1.5 rounded-lg border text-xs font-semibold flex-1 text-center" style="background-color: var(--bg-app); border-color: var(--border-color)">ก+</button>
+              </div>
+            </div>
+
+            <!-- Font Family Selector -->
+            <div class="space-y-2">
+              <label class="block text-[10px] font-bold uppercase tracking-wider" style="color: var(--text-muted)">รูปแบบตัวอักษร</label>
+              <select id="reader-font-selector" onchange="changeReaderFont(this.value)" class="w-full px-3 py-2 text-sm rounded-lg border focus:ring-2 focus:ring-blue-500 focus:outline-none bg-transparent" style="border-color: var(--border-color); color: var(--text-main);">
+                <option value="sarabun">สารบัญ (Sarabun - ไม่มีหัว)</option>
+                <option value="niramit">นิรมิต (Niramit - ไม่มีหัวเรียบหรู)</option>
+                <option value="charm">ชาม (Charm - มีหัวอ่อนช้อย)</option>
+                <option value="pridi">ปรีดี (Pridi - มีหัวร่วมสมัย)</option>
+                <option value="mali">มะลิ (Mali - ลายมือตัวการ์ตูน)</option>
+                <option value="chonburi">ชลบุรี (Chonburi - สวยสะดุดตา)</option>
+                <option value="baijamjuree">ใบจามจุรี (Bai Jamjuree - โมเดิร์นมีหัว)</option>
+              </select>
+            </div>
+
+            <!-- Themes Selectors -->
+            <div class="space-y-2">
+              <label class="block text-[10px] font-bold uppercase tracking-wider" style="color: var(--text-muted)">ธีมการอ่าน</label>
+              <div class="grid grid-cols-4 gap-1.5 text-xs">
+                <button onclick="switchTheme('light')" class="py-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 font-semibold text-center hover:scale-105 transition" title="สว่าง"></button>
+                <button onclick="switchTheme('sepia')" class="py-2.5 rounded-lg border border-amber-300 bg-[#fdf6e3] text-[#5b4636] font-semibold text-center hover:scale-105 transition" title="ถนอมสายตา"></button>
+                <button onclick="switchTheme('dark')" class="py-2.5 rounded-lg border border-slate-700 bg-[#1f2937] text-gray-200 font-semibold text-center hover:scale-105 transition" title="มืด"></button>
+                <button onclick="switchTheme('midnight')" class="py-2.5 rounded-lg border border-purple-950 bg-[#090d16] text-purple-200 font-semibold text-center hover:scale-105 transition" title="ราตรี"></button>
+              </div>
+            </div>
+
+            <!-- Padding Selector -->
+            <div class="space-y-2">
+              <label class="block text-[10px] font-bold uppercase tracking-wider" style="color: var(--text-muted)">ความกว้างขอบหน้าจอ</label>
+              <div class="grid grid-cols-3 gap-1 text-[10px]">
+                <button onclick="changeReaderWidth('narrow')" id="width-btn-narrow" class="py-1 rounded border" style="border-color: var(--border-color)">แคบ</button>
+                <button onclick="changeReaderWidth('medium')" id="width-btn-medium" class="py-1 rounded border bg-blue-600 text-white" style="border-color: var(--border-color)">ปกติ</button>
+                <button onclick="changeReaderWidth('wide')" id="width-btn-wide" class="py-1 rounded border" style="border-color: var(--border-color)">กว้าง</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- THE NOVEL CONTENT VIEWPORT -->
+          <div id="reader-content-viewport" class="novel-reader-body mt-20 px-5 md:px-8 py-10 flex-grow rounded-2xl shadow-sm border space-y-8 select-text" style="font-size: 18px; line-height: 1.8;">
+            
+            <!-- Chapter Title Header Inside Content -->
+            <div class="text-center border-b pb-6 space-y-2" style="border-color: rgba(120, 120, 120, 0.15)">
+              <h1 id="reader-chapter-title-main" class="text-2xl md:text-3xl font-extrabold tracking-tight">ชื่อตอน / บทที่</h1>
+              <div class="flex items-center justify-center gap-3 text-xs opacity-75">
+                <span id="reader-words-count">0 คำ</span>
+                <span>•</span>
+                <span id="reader-read-time">~1 นาที</span>
+              </div>
+            </div>
+
+            <!-- NOVEL BODY TEXT -->
+            <div id="reader-paragraphs" class="space-y-6 text-justify">
+              <!-- Paragraphs will be dynamically inserted here -->
+            </div>
+
+            <!-- Bottom Navigation Bar for Next/Prev Chapters -->
+            <div class="border-t pt-8 flex items-center justify-between gap-4" style="border-color: rgba(120, 120, 120, 0.15)">
+              <button onclick="navigateChapter('prev')" id="prev-chapter-btn" class="px-4 py-2 bg-black bg-opacity-5 hover:bg-opacity-10 rounded-xl transition flex items-center gap-1.5 text-sm font-semibold">
+                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                <span>ตอนก่อนหน้า</span>
+              </button>
+              <button onclick="toggleTOC()" class="px-4 py-2 bg-black bg-opacity-5 hover:bg-opacity-10 rounded-xl transition text-xs font-semibold">
+                <span>สารบัญ</span>
+              </button>
+              <button onclick="navigateChapter('next')" id="next-chapter-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition flex items-center gap-1.5 text-sm font-semibold">
+                <span>ตอนต่อไป</span>
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Quick feedback message to show bookmarks added -->
+          <div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 px-4 py-2.5 bg-slate-900 text-white text-xs rounded-xl shadow-lg flex items-center gap-2 opacity-0 pointer-events-none transition-all duration-300 z-50">
+            <i data-lucide="info" class="w-4 h-4 text-blue-400"></i>
+            <span id="toast-text">บุ๊กมาร์กเรียบร้อยแล้ว</span>
+          </div>
+
+        </div>
+      </section>
+
+
+      <!-- ================= SECTION 4: PRIVACY & SYSTEM SETTINGS ================= -->
+      <section id="view-settings" class="space-y-6 hidden">
+        <div class="flex items-center gap-2 cursor-pointer text-sm font-semibold hover:opacity-85" onclick="navigateTo('dashboard')" style="color: var(--accent);">
+          <i data-lucide="chevron-left" class="w-4 h-4"></i>
+          <span>กลับไปชั้นหนังสือ</span>
+        </div>
+
+        <div class="space-y-1">
+          <h2 class="text-2xl font-bold flex items-center gap-2">
+            <i data-lucide="shield-check" class="w-6 h-6 text-emerald-600"></i>
+            <span>ระบบความปลอดภัยและการจัดการนิยายของคุณ</span>
+          </h2>
+          <p class="text-xs" style="color: var(--text-muted)">ตั้งค่าความปลอดภัยของข้อมูล และเครื่องมือนำเข้า/ส่งออกแบบออฟไลน์</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <!-- Screen PIN Lock Management -->
+          <div class="p-5 rounded-2xl border space-y-4" style="background-color: var(--bg-card); border-color: var(--border-color);">
+            <h3 class="font-bold text-base flex items-center gap-2 border-b pb-2" style="border-color: var(--border-color)">
+              <i data-lucide="lock" class="w-5 h-5 text-indigo-500"></i>
+              <span>ระบบล็อครหัสผ่านหน้าจอ (PIN Lock)</span>
+            </h3>
+            
+            <p class="text-xs" style="color: var(--text-muted)">หากคุณเปิดใช้งานระบบนี้ ทุกครั้งที่เข้าแอปพลิเคชันมาจะจำเป็นต้องป้อนรหัสผ่าน 4 หลัก ป้องกันไม่ให้ผู้อื่นในมือถือมาเปิดอ่านนิยายของคุณโดยไม่ได้รับอนุญาต</p>
+
+            <div class="space-y-3 pt-2">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-bold">สถานะระบบล็อค</span>
+                <button onclick="togglePinLockStatus()" id="pin-lock-toggle-btn" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition">เปิดใช้งาน</button>
+              </div>
+
+              <div id="pin-setting-inputs" class="space-y-2 hidden">
+                <label class="block text-xs font-bold uppercase tracking-wider" style="color: var(--text-muted)">กรอกรหัส PIN ใหม่ 4 หลัก</label>
+                <div class="flex gap-2">
+                  <input type="password" id="new-pin-1" maxlength="4" placeholder="เช่น 1234" class="w-32 px-3 py-1.5 border rounded-lg text-center font-bold tracking-widest bg-transparent" style="border-color: var(--border-color)">
+                  <button onclick="saveNewPin()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition">บันทึก PIN</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Backup, Export & Import JSON Database -->
+          <div class="p-5 rounded-2xl border space-y-4" style="background-color: var(--bg-card); border-color: var(--border-color);">
+            <h3 class="font-bold text-base flex items-center gap-2 border-b pb-2" style="border-color: var(--border-color)">
+              <i data-lucide="database" class="w-5 h-5 text-blue-500"></i>
+              <span>การสำรองและย้ายข้อมูลนิยาย (Backup & Sync)</span>
+            </h3>
+            
+            <p class="text-xs" style="color: var(--text-muted)">เนื่องจากแอปพลิเคชันนี้ทำงานบนเครื่องของคุณโดยตรง หากคุณล้างแคชหรือประวัติการเข้าชมเบราว์เซอร์ ข้อมูลอาจสูญหายได้ แนะนำให้ดาวน์โหลดไฟล์สำรองเก็บไว้ในกรณีต้องการย้ายเครื่องหรืออ่านต่อที่คอมพิวเตอร์</p>
+
+            <div class="flex flex-col sm:flex-row gap-2.5 pt-2">
+              <button onclick="exportDatabase()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex-1 flex items-center justify-center gap-1.5">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>ดาวน์โหลดสำรองข้อมูล (.json)</span>
+              </button>
+
+              <label class="px-4 py-2.5 border rounded-lg text-xs font-semibold flex-1 flex items-center justify-center gap-1.5 cursor-pointer text-center hover:opacity-85" style="border-color: var(--border-color); color: var(--text-main);">
+                <i data-lucide="upload" class="w-4 h-4 text-indigo-500"></i>
+                <span>นำเข้าไฟล์สำรองข้อมูล</span>
+                <input type="file" id="import-db-file" accept=".json" onchange="importDatabase(event)" class="hidden">
+              </label>
+            </div>
+          </div>
+
+          <!-- Developer Info & Factory reset -->
+          <div class="p-5 rounded-2xl border space-y-4 md:col-span-2" style="background-color: var(--bg-card); border-color: var(--border-color);">
+            <h3 class="font-bold text-rose-500 text-base flex items-center gap-2 border-b pb-2" style="border-color: var(--border-color)">
+              <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+              <span>พื้นที่ควบคุมอันตราย</span>
+            </h3>
+            
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <p class="text-sm font-semibold">ลบข้อมูลทั้งหมดในระบบ</p>
+                <p class="text-xs" style="color: var(--text-muted)">การกระทำนี้จะลบนิยาย สถิติการอ่าน ประวัติ และบุ๊กมาร์กทั้งหมดของคุณเป็นการถาวร ไม่สามารถกู้กลับคืนมาได้อีก</p>
+              </div>
+              <button onclick="factoryReset()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition whitespace-nowrap">
+                ล้างข้อมูลทั้งหมดทันที
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t py-6 text-center text-xs mt-12 transition-colors" style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-muted);">
+      <div class="max-w-6xl mx-auto px-4 space-y-2">
+        <p class="font-bold text-gray-400">Private Novel Reader (Offline-First Edition)</p>
+        <p>สร้างขึ้นสำหรับการอ่านนิยายแบบเป็นส่วนตัว ใช้งานสะดวกบนโทรศัพท์มือถือและคอมพิวเตอร์ ข้อมูลปลอดภัยร้อยเปอร์เซ็นต์</p>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    // --- DATABASE STATE ---
+    let NOVELS = [];
+    let PIN_SETTING = {
+      enabled: false,
+      pin: "0000"
+    };
+    let ACTIVE_PIN_ATTEMPT = "";
+    let ACTIVE_NOVEL_INDEX = null;
+    let ACTIVE_CHAPTER_INDEX = null;
+    let TEMP_PREVIEW_CHAPTERS = [];
+    let CURRENT_COVER_COLOR = "blue";
+
+    // Typography state
+    let READING_SETTINGS = {
+      fontSize: 18,
+      fontFamily: "sarabun", // "sarabun", "niramit", "charm", "pridi", "mali", "chonburi", "baijamjuree"
+      theme: "light",     // "light", "sepia", "dark", "midnight"
+      width: "medium"     // "narrow", "medium", "wide"
+    };
+
+    // --- SAMPLE DATA LOAD ---
+    const SAMPLE_NOVEL = {
+      id: "sample_story_001",
+      title: "บันทึกของนักเดินทางข้ามมิติ",
+      author: "นักจารึกเวลา",
+      description: "เรื่องราวการเดินทางของนักวิจัยลึกลับผู้ผ่านประตูมิติกาลเวลาเพื่อสะสมประวัติศาสตร์แห่งจักรวาลคู่ขนาน (นิยายตัวอย่างสำหรับลองใช้ระบบอ่าน)",
+      coverColor: "blue",
+      createdAt: new Date().toISOString(),
+      lastReadChapter: 0,
+      lastReadProgress: 0,
+      chapters: [
+        {
+          title: "บทนำ: ประตูไร้ชื่อ",
+          content: "ภายใต้ห้องทดลองลึกสิบห้าเมตรใต้ผิวดินของกรุงลอนดอน ฝุ่นหนาทึบเกาะอยู่บนแผงควบคุมโลหะโบราณ ทันใดนั้น แสงสีครามสว่างจ้าขึ้นจากศูนย์กลางวงแหวนวงยักษ์ที่เงียบงันมานานกว่าห้าทศวรรษ\n\nอาเธอร์ ลีโอเกร็ด ตรวจสอบแว่นตาขอบทองของตนเองด้วยความตื่นเต้น มือสั่นเทาขณะจับปากกาขนนกเพื่อเริ่มจดบันทึก\n\n'มันทำงานแล้ว... พิกัดมิติดำเนินไปได้ดีอย่างที่คาดไว้ ฉันกำลังจะออกเดินทาง'\n\nเขาก้าวเท้าผ่านม่านแสงที่กระเพื่อมเหมือนคลื่นนิ่ง และเสียงความเงียบก็แผ่ซ่านเข้ามาแทนที่เสียงพัดลมของเครื่องจักร"
+        },
+        {
+          title: "บทที่ 1: เมืองลอยน้ำแห่งแอสทาเลีย",
+          content: "เมื่อลืมตาขึ้นมาอีกครั้ง กลิ่นหอมระเหยของไอเกลือและเกสรดอกไม้ที่เขาไม่รู้จักก็โชยมาปะทะจมูกเป็นสิ่งแรก ยามนี้ อาเธอร์กำลังยืนอยู่บนท่าเรือซึ่งแกะสลักขึ้นจากศิลาขาวสว่างจ้า\n\nด้านล่างไม่ใช่ทะเลธรรมดา แต่คือความว่างเปล่าที่เต็มไปด้วยเมฆหมอกสีทอง มหาสมุทรแห่งท้องฟ้าอันไร้ที่สิ้นสุด!\n\nเรือเดินสมุทรขนาดยักษ์ที่มีใบพัดเรืองแสงลำเลียงสินค้าจอดเทียบท่าอย่างสงบ ผู้คนที่นี่สวมชุดยาวผ้าไหมบางเบา ใบหน้าเปี่ยมไปด้วยรอยยิ้ม\n\nเขาก้าวมุ่งหน้าไปยังตลาดกลางของเมืองเพื่อค้นหาร่องรอยอารยธรรมแรก..."
+        },
+        {
+          title: "บทที่ 2: ความลับของศิลาจารึกสีทอง",
+          content: "กลางวิหารใหญ่ใจกลางเมืองแอสทาเลีย มีแผ่นศิลาสีทองสลักอักษรรูนโบราณลอยอยู่เหนือพื้นอย่างอิสระ อาเธอร์พยายามแปลอักขระเหล่านั้นด้วยตารางรหัสจากโลกเดิม\n\n'เมื่อท้องฟ้าเปิดออก ผู้เดินทางจะปรากฏกายเพื่อส่องสว่างเส้นทางโบราณ'\n\nเขาลูบคลำผิวนุ่มนวลของหิน ทันใดนั้นภาพนิมิตอันรวดเร็วก็พุ่งเข้าสู่ห้วงสมองของเขา แสดงภาพดวงดาวนับหมื่นที่ล่มสลายและกำเนิดใหม่ในเสี้ยวพริบตา!\n\nนี่มันไม่ใช่แค่บันทึกประวัติศาสตร์... แต่มันคือพิมพ์เขียวแห่งการสร้างมิติต่างหาก!"
+        }
+      ]
+    };
+
+    // --- INIT APP ---
+    window.addEventListener('DOMContentLoaded', () => {
+      loadFromLocalStorage();
+      initLucide();
+      applyReadingSettings();
+
+      // Check if PIN lock is enabled
+      if (PIN_SETTING.enabled) {
+        showPinScreen();
+      } else {
+        navigateTo('dashboard');
+      }
+
+      // Add scroll listener to track reading progress in Reader view
+      document.getElementById('reader-content-viewport').addEventListener('scroll', trackReadingScrollProgress);
+    });
+
+    function initLucide() {
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    }
+
+    // --- LOCAL STORAGE MANAGER ---
+    function loadFromLocalStorage() {
+      try {
+        const storedNovels = localStorage.getItem('pnr_novels');
+        if (storedNovels) {
+          NOVELS = JSON.parse(storedNovels);
+        } else {
+          NOVELS = [];
+        }
+
+        const storedPin = localStorage.getItem('pnr_pin_setting');
+        if (storedPin) {
+          PIN_SETTING = JSON.parse(storedPin);
+        }
+
+        const storedSettings = localStorage.getItem('pnr_reading_settings');
+        if (storedSettings) {
+          READING_SETTINGS = JSON.parse(storedSettings);
+          // Apply active theme immediately
+          document.body.className = `theme-${READING_SETTINGS.theme}`;
+        }
+      } catch (e) {
+        console.error("Local Storage is disabled or failed to parse:", e);
+      }
+    }
+
+    function saveToLocalStorage() {
+      try {
+        localStorage.setItem('pnr_novels', JSON.stringify(NOVELS));
+        localStorage.setItem('pnr_pin_setting', JSON.stringify(PIN_SETTING));
+        localStorage.setItem('pnr_reading_settings', JSON.stringify(READING_SETTINGS));
+      } catch (e) {
+        console.error("Failed to save to Local Storage:", e);
+      }
+    }
+
+    // --- NAVIGATION SYSTEM ---
+    function navigateTo(viewId) {
+      // Hide all views
+      document.getElementById('view-dashboard').classList.add('hidden');
+      document.getElementById('view-import').classList.add('hidden');
+      document.getElementById('view-reader').classList.add('hidden');
+      document.getElementById('view-settings').classList.add('hidden');
+
+      // Show requested view
+      document.getElementById(`view-${viewId}`).classList.remove('hidden');
+
+      // Trigger view-specific renders
+      if (viewId === 'dashboard') {
+        renderDashboard();
+      } else if (viewId === 'settings') {
+        renderSettings();
+      }
+
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // --- PIN LOCK LOGIC ---
+    function showPinScreen() {
+      document.getElementById('pin-screen').classList.remove('hidden');
+      ACTIVE_PIN_ATTEMPT = "";
+      updatePinDots();
+    }
+
+    function hidePinScreen() {
+      document.getElementById('pin-screen').classList.add('hidden');
+      navigateTo('dashboard');
+    }
+
+    function pressPin(num) {
+      if (ACTIVE_PIN_ATTEMPT.length < 4) {
+        ACTIVE_PIN_ATTEMPT += num;
+        updatePinDots();
+        
+        // Hide error message on keypress
+        document.getElementById('pin-error').classList.add('opacity-0');
+
+        if (ACTIVE_PIN_ATTEMPT.length === 4) {
+          // Verify PIN
+          setTimeout(() => {
+            if (ACTIVE_PIN_ATTEMPT === PIN_SETTING.pin) {
+              hidePinScreen();
+            } else {
+              // Failed attempt
+              document.getElementById('pin-error').classList.remove('opacity-0');
+              ACTIVE_PIN_ATTEMPT = "";
+              updatePinDots();
+            }
+          }, 200);
+        }
+      }
+    }
+
+    function clearPin() {
+      ACTIVE_PIN_ATTEMPT = "";
+      updatePinDots();
+    }
+
+    function backspacePin() {
+      if (ACTIVE_PIN_ATTEMPT.length > 0) {
+        ACTIVE_PIN_ATTEMPT = ACTIVE_PIN_ATTEMPT.slice(0, -1);
+        updatePinDots();
+      }
+    }
+
+    function updatePinDots() {
+      for (let i = 1; i <= 4; i++) {
+        const dot = document.getElementById(`dot-${i}`);
+        if (i <= ACTIVE_PIN_ATTEMPT.length) {
+          dot.className = "w-4 h-4 rounded-full bg-blue-500 border border-blue-500 scale-110 shadow-md shadow-blue-500/50 transition-all duration-150";
+        } else {
+          dot.className = "w-4 h-4 rounded-full border border-slate-600 transition-all duration-150";
+        }
+      }
+    }
+
+    // --- DASHBOARD RENDER ---
+    function renderDashboard() {
+      const grid = document.getElementById('library-grid');
+      const emptyState = document.getElementById('library-empty-state');
+      const countBadge = document.getElementById('novel-count-badge');
+      
+      grid.innerHTML = "";
+      countBadge.innerText = `${NOVELS.length} เรื่อง`;
+
+      if (NOVELS.length === 0) {
+        emptyState.classList.remove('hidden');
+        document.getElementById('reading-history-container').classList.add('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+
+      // Populate history card if available
+      const lastReadNovel = NOVELS.find(n => n.lastReadChapter !== undefined);
+      if (lastReadNovel && lastReadNovel.chapters && lastReadNovel.chapters[lastReadNovel.lastReadChapter]) {
+        document.getElementById('reading-history-container').classList.remove('hidden');
+        document.getElementById('history-title').innerText = lastReadNovel.title;
+        const currentCh = lastReadNovel.chapters[lastReadNovel.lastReadChapter];
+        const progressPercent = Math.round(lastReadNovel.lastReadProgress || 0);
+        document.getElementById('history-details').innerText = `${currentCh.title} • อ่านไปแล้ว ${progressPercent}%`;
+        
+        // Find absolute indexes
+        const nIndex = NOVELS.indexOf(lastReadNovel);
+        document.getElementById('history-card').onclick = () => {
+          openReader(nIndex, lastReadNovel.lastReadChapter);
+        };
+      } else {
+        document.getElementById('reading-history-container').classList.add('hidden');
+      }
+
+      // Render Novels inside Library Grid
+      NOVELS.forEach((novel, nIndex) => {
+        // Find theme gradients for novel covers
+        let coverGradient = "from-blue-600 to-indigo-700";
+        let textBgColor = "bg-blue-50 text-blue-700";
+        if (novel.coverColor === "amber") {
+          coverGradient = "from-amber-500 to-orange-600";
+          textBgColor = "bg-amber-50 text-amber-700";
+        } else if (novel.coverColor === "emerald") {
+          coverGradient = "from-emerald-500 to-teal-600";
+          textBgColor = "bg-emerald-50 text-emerald-700";
+        } else if (novel.coverColor === "purple") {
+          coverGradient = "from-purple-500 to-pink-600";
+          textBgColor = "bg-purple-50 text-purple-700";
+        }
+
+        const totalChapters = novel.chapters ? novel.chapters.length : 0;
+        const totalWords = novel.chapters ? novel.chapters.reduce((sum, ch) => sum + (ch.content ? ch.content.length : 0), 0) : 0;
+
+        const card = document.createElement('div');
+        card.className = "rounded-2xl border transition-all hover:shadow-lg overflow-hidden flex flex-col cursor-pointer";
+        card.style.backgroundColor = "var(--bg-card)";
+        card.style.borderColor = "var(--border-color)";
+        
+        card.innerHTML = `
+          <!-- Decorative Cover Top header -->
+          <div class="h-28 bg-gradient-to-tr ${coverGradient} p-4 flex flex-col justify-between text-white relative">
+            <span class="absolute top-2 right-2 text-[10px] uppercase font-bold tracking-widest bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-full">
+              Private Storage
+            </span>
+            <div class="mt-auto">
+              <span class="text-xs font-semibold opacity-90">${novel.author || 'ไม่ระบุนามปากกา'}</span>
+              <h3 class="font-bold text-lg leading-tight line-clamp-1">${novel.title}</h3>
+            </div>
+          </div>
+
+          <div class="p-4 flex-grow flex flex-col justify-between space-y-4">
+            <p class="text-xs line-clamp-2" style="color: var(--text-muted)">
+              ${novel.description || 'ไม่มีคำอธิบายหรือคำโปรยสำหรับนิยายเรื่องนี้'}
+            </p>
+
+            <div class="grid grid-cols-2 gap-2 text-center border-t border-b py-2 text-xs" style="border-color: var(--border-color)">
+              <div>
+                <span class="block font-extrabold text-sm">${totalChapters}</span>
+                <span style="color: var(--text-muted)">จำนวนตอนทั้งหมด</span>
+              </div>
+              <div>
+                <span class="block font-extrabold text-sm">${formatNumber(totalWords)}</span>
+                <span style="color: var(--text-muted)">ตัวอักษรรวม</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-2 pt-1">
+              <button onclick="deleteNovel(event, ${nIndex})" class="p-2 hover:bg-rose-500/10 text-rose-500 rounded-lg transition" title="ลบนิยายเรื่องนี้">
+                <i data-lucide="trash-2" class="w-4.5 h-4.5"></i>
+              </button>
+
+              <button onclick="openReader(${nIndex}, ${novel.lastReadChapter || 0})" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition">
+                <i data-lucide="book-open" class="w-4 h-4"></i>
+                <span>อ่านนิยาย</span>
+              </button>
+            </div>
+          </div>
+        `;
+        
+        // Add click listener for card body (but avoid trigger if clicking delete button)
+        card.addEventListener('click', (e) => {
+          if (!e.target.closest('button')) {
+            openReader(nIndex, novel.lastReadChapter || 0);
+          }
+        });
+
+        grid.appendChild(card);
+      });
+
+      initLucide();
+    }
+
+    function formatNumber(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function deleteNovel(event, index) {
+      event.stopPropagation();
+      if (confirm(`คุณต้องการลบนิยาย "${NOVELS[index].title}" ใช่หรือไม่? ทุกข้อมูลการอ่านจะหายไปอย่างถาวร`)) {
+        NOVELS.splice(index, 1);
+        saveToLocalStorage();
+        renderDashboard();
+        showToast("ลบนิยายเรียบร้อยแล้ว");
+      }
+    }
+
+    function loadSampleNovel() {
+      // Check if already exists
+      if (NOVELS.some(n => n.id === SAMPLE_NOVEL.id)) {
+        showToast("มีนิยายตัวอย่างอยู่ในชั้นหนังสือแล้ว");
+        return;
+      }
+      NOVELS.push(JSON.parse(JSON.stringify(SAMPLE_NOVEL)));
+      saveToLocalStorage();
+      renderDashboard();
+      showToast("โหลดเรื่องตัวอย่างเรียบร้อยแล้ว!");
+    }
+
+    // --- PARSE GOOGLE DOCS CONTENT ---
+    function selectCoverColor(color) {
+      CURRENT_COVER_COLOR = color;
+      
+      // Update UI active indicator
+      document.querySelectorAll('.color-picker-btn').forEach(btn => {
+        if (btn.getAttribute('data-color') === color) {
+          btn.classList.add('ring-2', 'ring-blue-500', 'border-white');
+          btn.classList.remove('border-transparent');
+        } else {
+          btn.classList.remove('ring-2', 'ring-blue-500', 'border-white');
+          btn.classList.add('border-transparent');
+        }
+      });
+    }
+
+    function parseAndPreviewContent() {
+      const rawText = document.getElementById('import-raw-content').value.trim();
+      const splitMode = document.getElementById('import-split-keyword').value;
+
+      if (!rawText) {
+        alert("กรุณาใส่เนื้อหาจาก Google Docs ลงในกล่องข้อความก่อนพรีวิว");
+        return;
+      }
+
+      // Regex matching split keyword
+      // Default auto-detect triggers: บทที่, ตอนที่, Chapter, ---, ตอน, บท
+      let splitRegex;
+      if (splitMode === 'auto') {
+        splitRegex = /(?:บทที่|ตอนที่|Chapter|ตอน|บท)\s*\d+[\s\S]*?(?=\n|$)/i;
+      } else if (splitMode === '---') {
+        splitRegex = /---/g;
+      } else {
+        splitRegex = new RegExp(`(${splitMode}\\s*\\d+|${splitMode}\\s*\\w+)`, 'i');
+      }
+
+      // Parsing content
+      const lines = rawText.split('\n');
+      let chapters = [];
+      let currentChapterTitle = "บทนำ/เริ่มต้น";
+      let currentChapterParagraphs = [];
+
+      // Auto-detect split logic
+      let matchesKeyword = (line) => {
+        if (splitMode === 'auto') {
+          return /^\s*(?:บทที่|ตอนที่|Chapter|ตอน|บท)\s*[\d๑๒๓๔๕๖๗๘๙๐]+/i.test(line);
+        } else if (splitMode === '---') {
+          return line.trim() === '---';
+        } else {
+          return line.toLowerCase().includes(splitMode.toLowerCase());
+        }
+      };
+
+      lines.forEach(line => {
+        const trimmed = line.trim();
+        if (matchesKeyword(trimmed)) {
+          // If we had content in current chapter, save it first
+          if (currentChapterParagraphs.length > 0 || currentChapterTitle !== "บทนำ/เริ่มต้น") {
+            chapters.push({
+              title: currentChapterTitle,
+              content: currentChapterParagraphs.join('\n\n')
+            });
+          }
+          // Set new chapter title
+          currentChapterTitle = trimmed === '---' ? `ตอนใหม่ที่ ${chapters.length + 1}` : trimmed;
+          currentChapterParagraphs = [];
+        } else {
+          if (trimmed !== "") {
+            currentChapterParagraphs.push(trimmed);
+          }
+        }
+      });
+
+      // Push final chapter
+      if (currentChapterParagraphs.length > 0 || chapters.length === 0) {
+        chapters.push({
+          title: currentChapterTitle,
+          content: currentChapterParagraphs.join('\n\n')
+        });
+      }
+
+      TEMP_PREVIEW_CHAPTERS = chapters;
+
+      // Update Preview UI
+      const previewContainer = document.getElementById('parse-preview-container');
+      const parsedList = document.getElementById('parsed-chapters-list');
+      const chapterCountSpan = document.getElementById('parsed-chapter-count');
+      const wordCountSpan = document.getElementById('word-count-preview');
+
+      chapterCountSpan.innerText = chapters.length;
+      
+      let totalWords = 0;
+      parsedList.innerHTML = "";
+
+      chapters.forEach((ch, idx) => {
+        const wordCount = ch.content.length;
+        totalWords += wordCount;
+
+        const row = document.createElement('div');
+        row.className = "flex justify-between py-2 px-3 hover:bg-black hover:bg-opacity-5 transition";
+        row.innerHTML = `
+          <span class="font-semibold">${ch.title}</span>
+          <span style="color: var(--text-muted)">${formatNumber(wordCount)} ตัวอักษร</span>
+        `;
+        parsedList.appendChild(row);
+      });
+
+      wordCountSpan.innerText = `รวมประมาณ ${formatNumber(totalWords)} ตัวอักษร`;
+      previewContainer.classList.remove('hidden');
+
+      // Enable Save button
+      document.getElementById('save-novel-btn').removeAttribute('disabled');
+      showToast("แบ่งตอนวิเคราะห์สำเร็จ! ตรวจสอบพรีวิวด้านล่าง");
+    }
+
+    function saveImportedNovel() {
+      const title = document.getElementById('import-title').value.trim();
+      const author = document.getElementById('import-author').value.trim() || "ไม่ระบุนามปากกา";
+      const description = document.getElementById('import-description').value.trim() || "";
+
+      if (!title) {
+        alert("กรุณากรอกชื่อเรื่องนิยาย");
+        return;
+      }
+
+      if (TEMP_PREVIEW_CHAPTERS.length === 0) {
+        alert("ไม่พบข้อมูลบทนิยาย กรุณากดตรวจสอบ/พรีวิวก่อน");
+        return;
+      }
+
+      const newNovel = {
+        id: 'novel_' + Date.now(),
+        title: title,
+        author: author,
+        description: description,
+        coverColor: CURRENT_COVER_COLOR,
+        createdAt: new Date().toISOString(),
+        lastReadChapter: 0,
+        lastReadProgress: 0,
+        chapters: TEMP_PREVIEW_CHAPTERS
+      };
+
+      NOVELS.push(newNovel);
+      saveToLocalStorage();
+
+      // Reset Form fields
+      document.getElementById('import-title').value = "";
+      document.getElementById('import-author').value = "";
+      document.getElementById('import-description').value = "";
+      document.getElementById('import-raw-content').value = "";
+      document.getElementById('parse-preview-container').classList.add('hidden');
+      document.getElementById('save-novel-btn').setAttribute('disabled', 'true');
+      TEMP_PREVIEW_CHAPTERS = [];
+
+      // Navigate back & Refresh
+      navigateTo('dashboard');
+      showToast(`นำเข้านิยาย "${title}" เรียบร้อยแล้ว!`);
+    }
+
+    // --- IMMERSIVE READER MAIN ENGINE ---
+    function openReader(novelIndex, chapterIndex) {
+      ACTIVE_NOVEL_INDEX = novelIndex;
+      ACTIVE_CHAPTER_INDEX = chapterIndex;
+
+      const novel = NOVELS[novelIndex];
+      if (!novel || !novel.chapters || novel.chapters.length === 0) {
+        alert("ไม่พบข้อมูลตอนหรือเนื้อหาของนิยายเรื่องนี้");
+        return;
+      }
+
+      const chapter = novel.chapters[chapterIndex];
+      if (!chapter) {
+        // Fallback to chapter 0
+        ACTIVE_CHAPTER_INDEX = 0;
+      }
+
+      // Hide core elements, enter full screen style
+      navigateTo('reader');
+
+      // Apply Reader values
+      document.getElementById('reader-novel-title').innerText = novel.title;
+      renderActiveChapter();
+    }
+
+    function renderActiveChapter() {
+      const novel = NOVELS[ACTIVE_NOVEL_INDEX];
+      const chapter = novel.chapters[ACTIVE_CHAPTER_INDEX];
+
+      // Update titles
+      document.getElementById('reader-chapter-title-header').innerText = chapter.title;
+      document.getElementById('reader-chapter-title-main').innerText = chapter.title;
+
+      // Words and reading speed (approx. 400 chars per min in Thai)
+      const wordsCount = chapter.content.length;
+      document.getElementById('reader-words-count').innerText = `${formatNumber(wordsCount)} ตัวอักษร`;
+      document.getElementById('reader-read-time').innerText = `~${Math.max(1, Math.round(wordsCount / 350))} นาที`;
+
+      // Split paragraphs and build reader UI
+      const paragraphsDiv = document.getElementById('reader-paragraphs');
+      paragraphsDiv.innerHTML = "";
+
+      // Smart paragraph processing (handles double newlines or single newlines nicely)
+      const rawParas = chapter.content.split(/\n+/);
+      rawParas.forEach(pText => {
+        const trimmed = pText.trim();
+        if (trimmed) {
+          const p = document.createElement('p');
+          p.className = "indent-8 mb-4 tracking-wide leading-relaxed";
+          p.innerText = trimmed;
+          paragraphsDiv.appendChild(p);
+        }
+      });
+
+      // Update Navigation buttons
+      const prevBtn = document.getElementById('prev-chapter-btn');
+      const nextBtn = document.getElementById('next-chapter-btn');
+
+      if (ACTIVE_CHAPTER_INDEX > 0) {
+        prevBtn.removeAttribute('disabled');
+        prevBtn.style.opacity = "1";
+      } else {
+        prevBtn.setAttribute('disabled', 'true');
+        prevBtn.style.opacity = "0.3";
+      }
+
+      if (ACTIVE_CHAPTER_INDEX < novel.chapters.length - 1) {
+        nextBtn.removeAttribute('disabled');
+        nextBtn.style.opacity = "1";
+        nextBtn.innerText = "ตอนต่อไป";
+      } else {
+        nextBtn.removeAttribute('disabled');
+        nextBtn.style.opacity = "1";
+        nextBtn.innerText = "อ่านจบแล้ว";
+      }
+
+      // Refresh Bookmarks icon status
+      updateBookmarkIcon();
+
+      // Scroll reader viewport to top
+      const viewport = document.getElementById('reader-content-viewport');
+      viewport.scrollTop = 0;
+
+      // Set reading progress bar
+      document.getElementById('reading-progress-bar').style.width = "0%";
+
+      // Save novel's current progress state
+      novel.lastReadChapter = ACTIVE_CHAPTER_INDEX;
+      novel.lastReadProgress = 0;
+      saveToLocalStorage();
+
+      // Ensure TOC is updated
+      renderTOC();
+    }
+
+    function navigateChapter(direction) {
+      const novel = NOVELS[ACTIVE_NOVEL_INDEX];
+      
+      if (direction === 'prev' && ACTIVE_CHAPTER_INDEX > 0) {
+        ACTIVE_CHAPTER_INDEX--;
+        renderActiveChapter();
+      } else if (direction === 'next') {
+        if (ACTIVE_CHAPTER_INDEX < novel.chapters.length - 1) {
+          ACTIVE_CHAPTER_INDEX++;
+          renderActiveChapter();
+        } else {
+          // Finished reading the novel!
+          alert(`ยินดีด้วย! คุณอ่านนิยาย "${novel.title}" ครบถ้วนทุกตอนแล้ว`);
+          exitReader();
+        }
+      }
+    }
+
+    function exitReader() {
+      // Clear up settings panels
+      closeReaderOverlays();
+      navigateTo('dashboard');
+    }
+
+    // --- TYPOGRAPHY AND LOOK CUSTOMIZATION ---
+    function toggleReaderMenu() {
+      const panel = document.getElementById('reader-settings-panel');
+      const overlay = document.getElementById('reader-overlay');
+      
+      if (panel.classList.contains('hidden')) {
+        panel.classList.remove('hidden');
+        overlay.classList.remove('hidden');
+      } else {
+        panel.classList.add('hidden');
+        overlay.classList.add('hidden');
+      }
+    }
+
+    function closeReaderOverlays() {
+      document.getElementById('reader-settings-panel').classList.add('hidden');
+      document.getElementById('toc-sidebar').classList.add('transform', 'translate-x-full');
+      document.getElementById('reader-overlay').classList.add('hidden');
+    }
+
+    function adjustFontSize(amount) {
+      let currentSize = READING_SETTINGS.fontSize;
+      currentSize = Math.max(12, Math.min(32, currentSize + amount));
+      READING_SETTINGS.fontSize = currentSize;
+      
+      applyReadingSettings();
+      saveToLocalStorage();
+    }
+
+    function changeReaderFont(fontType) {
+      READING_SETTINGS.fontFamily = fontType;
+      applyReadingSettings();
+      saveToLocalStorage();
+    }
+
+    function changeReaderWidth(width) {
+      READING_SETTINGS.width = width;
+      applyReadingSettings();
+      saveToLocalStorage();
+    }
+
+    function switchTheme(themeName) {
+      READING_SETTINGS.theme = themeName;
+      document.body.className = `theme-${themeName}`;
+      
+      applyReadingSettings();
+      saveToLocalStorage();
+    }
+
+    function applyReadingSettings() {
+      const viewport = document.getElementById('reader-content-viewport');
+      
+      // Set Font size
+      viewport.style.fontSize = `${READING_SETTINGS.fontSize}px`;
+      document.getElementById('current-font-size-label').innerText = `${READING_SETTINGS.fontSize}px`;
+
+      // Set Font family
+      viewport.style.fontFamily = `var(--font-novel-${READING_SETTINGS.fontFamily})`;
+
+      // Update dropdown selection if element exists
+      const fontSelector = document.getElementById('reader-font-selector');
+      if (fontSelector) {
+        fontSelector.value = READING_SETTINGS.fontFamily;
+      }
+
+      // Max width controls (screen padding width)
+      viewport.className = "novel-reader-body mt-20 py-10 flex-grow rounded-2xl shadow-sm border space-y-8 select-text transition-all duration-200";
+      if (READING_SETTINGS.width === 'narrow') {
+        viewport.classList.add('px-8', 'md:px-24', 'max-w-2xl', 'mx-auto');
+      } else if (READING_SETTINGS.width === 'wide') {
+        viewport.classList.add('px-4', 'max-w-full');
+      } else {
+        // Medium
+        viewport.classList.add('px-5', 'md:px-12', 'max-w-4xl', 'mx-auto');
+      }
+
+      // UI button width feedback
+      const widthBtns = {
+        narrow: document.getElementById('width-btn-narrow'),
+        medium: document.getElementById('width-btn-medium'),
+        wide: document.getElementById('width-btn-wide')
+      };
+
+      Object.keys(widthBtns).forEach(key => {
+        const btn = widthBtns[key];
+        if (btn) {
+          if (key === READING_SETTINGS.width) {
+            btn.className = "py-1 rounded border bg-blue-600 text-white font-semibold";
+          } else {
+            btn.className = "py-1 rounded border";
+            btn.style.borderColor = "var(--border-color)";
+          }
+        }
+      });
+    }
+
+    // --- BOOKMARKS & PROGRESS LOGIC ---
+    function toggleBookmark() {
+      const novel = NOVELS[ACTIVE_NOVEL_INDEX];
+      if (!novel) return;
+
+      if (!novel.bookmarks) {
+        novel.bookmarks = [];
+      }
+
+      const currentChapIndex = ACTIVE_CHAPTER_INDEX;
+      const index = novel.bookmarks.indexOf(currentChapIndex);
+
+      if (index === -1) {
+        novel.bookmarks.push(currentChapIndex);
+        showToast("เพิ่มบุ๊กมาร์กตอนปัจจุบันเรียบร้อยแล้ว");
+      } else {
+        novel.bookmarks.splice(index, 1);
+        showToast("ยกเลิกบุ๊กมาร์กตอนปัจจุบัน");
+      }
+
+      saveToLocalStorage();
+      updateBookmarkIcon();
+    }
+
+    function updateBookmarkIcon() {
+      const icon = document.getElementById('bookmark-icon');
+      const novel = NOVELS[ACTIVE_NOVEL_INDEX];
+      
+      if (novel && novel.bookmarks && novel.bookmarks.includes(ACTIVE_CHAPTER_INDEX)) {
+        icon.classList.add('text-amber-500', 'fill-amber-500');
+      } else {
+        icon.classList.remove('text-amber-500', 'fill-amber-500');
+      }
+    }
+
+    function trackReadingScrollProgress() {
+      const viewport = document.getElementById('reader-content-viewport');
+      const totalScrollHeight = viewport.scrollHeight - viewport.clientHeight;
+      
+      if (totalScrollHeight > 0) {
+        const currentScroll = viewport.scrollTop;
+        const progressPercent = Math.min(100, Math.max(0, (currentScroll / totalScrollHeight) * 100));
+        
+        document.getElementById('reading-progress-bar').style.width = `${progressPercent}%`;
+
+        // Safely update state without spamming writes
+        const novel = NOVELS[ACTIVE_NOVEL_INDEX];
+        if (novel) {
+          novel.lastReadProgress = progressPercent;
+          // Throttled / debounced LocalStorage write
+          saveToLocalStorage();
+        }
+      }
+    }
+
+    // --- TABLE OF CONTENTS (TOC) ---
+    function toggleTOC() {
+      const sidebar = document.getElementById('toc-sidebar');
+      const overlay = document.getElementById('reader-overlay');
+
+      if (sidebar.classList.contains('translate-x-full')) {
+        sidebar.classList.remove('translate-x-full');
+        overlay.classList.remove('hidden');
+        renderTOC();
+      } else {
+        sidebar.classList.add('translate-x-full');
+        overlay.classList.add('hidden');
+      }
+    }
+
+    function renderTOC() {
+      const list = document.getElementById('toc-chapters-list');
+      const novel = NOVELS[ACTIVE_NOVEL_INDEX];
+      
+      list.innerHTML = "";
+      document.getElementById('toc-total-chapters').innerText = novel.chapters.length;
+
+      novel.chapters.forEach((ch, idx) => {
+        const item = document.createElement('div');
+        item.className = `p-4 flex items-center justify-between cursor-pointer transition ${
+          idx === ACTIVE_CHAPTER_INDEX ? 'bg-blue-600/10 text-blue-600 font-bold border-l-4 border-blue-600' : 'hover:bg-black/5'
+        }`;
+        
+        // Check bookmark tag
+        const isBookmarked = novel.bookmarks && novel.bookmarks.includes(idx);
+
+        item.innerHTML = `
+          <div class="flex flex-col space-y-1">
+            <span class="text-sm line-clamp-1">${ch.title}</span>
+            <span class="text-[10px] opacity-75">${formatNumber(ch.content.length)} ตัวอักษร</span>
+          </div>
+          ${isBookmarked ? '<i data-lucide="bookmark" class="w-4 h-4 text-amber-500 fill-amber-500"></i>' : ''}
+        `;
+
+        item.onclick = () => {
+          ACTIVE_CHAPTER_INDEX = idx;
+          renderActiveChapter();
+          closeReaderOverlays();
+        };
+
+        list.appendChild(item);
+      });
+
+      initLucide();
+    }
+
+    // --- SYSTEM SETTINGS VIEW ---
+    function renderSettings() {
+      const toggleBtn = document.getElementById('pin-lock-toggle-btn');
+      const inputsDiv = document.getElementById('pin-setting-inputs');
+
+      if (PIN_SETTING.enabled) {
+        toggleBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-600 text-white";
+        toggleBtn.innerText = "เปิดใช้งานอยู่";
+        inputsDiv.classList.remove('hidden');
+      } else {
+        toggleBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-gray-300 dark:bg-slate-700 text-gray-700 dark:text-gray-300";
+        toggleBtn.innerText = "ปิดใช้งาน";
+        inputsDiv.classList.add('hidden');
+      }
+    }
+
+    function togglePinLockStatus() {
+      PIN_SETTING.enabled = !PIN_SETTING.enabled;
+      saveToLocalStorage();
+      renderSettings();
+      showToast(PIN_SETTING.enabled ? "เปิดระบบรหัสผ่านสำเร็จ" : "ปิดระบบรหัสผ่านแล้ว");
+    }
+
+    function saveNewPin() {
+      const input = document.getElementById('new-pin-1');
+      const newPin = input.value.trim();
+
+      if (newPin.length < 4 || isNaN(newPin)) {
+        alert("กรุณากรอกรหัส PIN เป็นตัวเลข 4 หลัก");
+        return;
+      }
+
+      PIN_SETTING.pin = newPin;
+      PIN_SETTING.enabled = true;
+      saveToLocalStorage();
+      
+      input.value = "";
+      renderSettings();
+      showToast("บันทึกรหัส PIN ใหม่สำเร็จแล้ว!");
+    }
+
+    function exportDatabase() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+        novels: NOVELS,
+        pinSetting: PIN_SETTING
+      }));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `private_novels_backup_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast("ดาวน์โหลดไฟล์สำรองข้อมูลสำเร็จ");
+    }
+
+    function importDatabase(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported.novels && Array.isArray(imported.novels)) {
+            NOVELS = imported.novels;
+            if (imported.pinSetting) {
+              PIN_SETTING = imported.pinSetting;
+            }
+            saveToLocalStorage();
+            renderDashboard();
+            navigateTo('dashboard');
+            showToast("นำเข้าข้อมูลนิยายจากไฟล์สำรองสำเร็จ!");
+          } else {
+            alert("รูปแบบไฟล์ไม่ถูกต้อง หรือไม่พบนิยายในไฟล์");
+          }
+        } catch (error) {
+          alert("เกิดข้อผิดพลาดในการอ่านไฟล์ กรุณาลองใหม่อีกครั้ง");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function factoryReset() {
+      if (confirm("คุณแน่ใจหรือไม่ว่าต้องการล้างข้อมูลทั้งหมด? ข้อมูลนิยายและสถิติทั้งหมดบนอุปกรณ์นี้จะสูญหายอย่างถาวร!")) {
+        localStorage.clear();
+        NOVELS = [];
+        PIN_SETTING = { enabled: false, pin: "0000" };
+        saveToLocalStorage();
+        navigateTo('dashboard');
+        showToast("รีเซ็ตระบบกลับสู่สถานะเริ่มต้นแล้ว");
+      }
+    }
+
+    // --- COMMON UTILS ---
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastText = document.getElementById('toast-text');
+      
+      toastText.innerText = message;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.add('opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 2500);
+    }
+  </script>
+</body>
+</html>
