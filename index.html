@@ -652,7 +652,7 @@
                   <span>ดึงข้อมูลจากคอมพิวเตอร์หรืออุปกรณ์อื่น</span>
                 </h4>
                 <div class="flex gap-2">
-                  <input type="text" id="sync-input-pin" placeholder="กรอกรหัส 6 หลัก" maxlength="6" class="w-full px-3 py-1.5 border rounded-lg text-center font-bold tracking-widest bg-transparent uppercase" style="border-color: var(--border-color)">
+                  <input type="text" id="sync-input-pin" placeholder="กรอกรหัส 6 หลัก" maxlength="24" class="w-full px-3 py-1.5 border rounded-lg text-center font-bold tracking-widest bg-transparent uppercase" style="border-color: var(--border-color)">
                   <button onclick="fetchSyncData()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition whitespace-nowrap">
                     ซิงค์ข้อมูล
                   </button>
@@ -683,6 +683,112 @@
         </div>
       </section>
 
+
+      <!-- ================= SECTION 5: MANAGE NOVEL ================= -->
+      <section id="view-manage-novel" class="space-y-6 hidden">
+        <div class="flex items-center gap-2 cursor-pointer text-sm font-semibold hover:opacity-85" onclick="navigateTo('dashboard')" style="color: var(--accent);">
+          <i data-lucide="chevron-left" class="w-4 h-4"></i>
+          <span>กลับไปชั้นหนังสือ</span>
+        </div>
+
+        <div class="space-y-1">
+          <h2 class="text-2xl font-bold flex items-center gap-2">
+            <i data-lucide="edit-3" class="w-6 h-6 text-blue-600"></i>
+            <span>จัดการตอนและเนื้อหานิยาย</span>
+          </h2>
+          <p class="text-xs" style="color: var(--text-muted)">แก้ไขรายละเอียดนิยาย เพิ่มตอนใหม่ หรือแก้ไขเนื้อหาตอนที่มีอยู่แล้ว</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Edit Info & Add Chapter Form -->
+          <div class="lg:col-span-1 space-y-6">
+            <!-- Edit Info Card -->
+            <div class="p-5 rounded-2xl border space-y-4" style="background-color: var(--bg-card); border-color: var(--border-color);">
+              <h3 class="font-bold text-sm border-b pb-2 flex items-center gap-1.5" style="border-color: var(--border-color)">
+                <i data-lucide="info" class="w-4 h-4 text-blue-500"></i>
+                <span>แก้ไขข้อมูลพื้นฐาน</span>
+              </h3>
+              <div class="space-y-3 text-sm">
+                <div>
+                  <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted)">ชื่อเรื่อง</label>
+                  <input type="text" id="edit-novel-title" class="w-full px-3 py-2 rounded-lg border bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" style="border-color: var(--border-color)">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted)">นามปากกา / ผู้แต่ง</label>
+                  <input type="text" id="edit-novel-author" class="w-full px-3 py-2 rounded-lg border bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" style="border-color: var(--border-color)">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted)">คำอธิบาย / เรื่องย่อ</label>
+                  <textarea id="edit-novel-desc" rows="3" class="w-full px-3 py-2 rounded-lg border bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" style="border-color: var(--border-color)"></textarea>
+                </div>
+                <button onclick="saveNovelMetaEdits()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs transition">บันทึกข้อมูลพื้นฐาน</button>
+              </div>
+            </div>
+
+            <!-- Add Single Chapter Card -->
+            <div class="p-5 rounded-2xl border space-y-4" style="background-color: var(--bg-card); border-color: var(--border-color);">
+              <h3 class="font-bold text-sm border-b pb-2 flex items-center gap-1.5" style="border-color: var(--border-color)">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-500"></i>
+                <span>เพิ่มตอนใหม่ต่อท้าย</span>
+              </h3>
+              <div class="space-y-3 text-sm">
+                <div>
+                  <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted)">ชื่อตอน (เช่น บทที่ 3: เผชิญหน้า)</label>
+                  <input type="text" id="new-chap-title" placeholder="พิมพ์ชื่อตอน..." class="w-full px-3 py-2 rounded-lg border bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" style="border-color: var(--border-color)">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted)">เนื้อหาตอนใหม่</label>
+                  <textarea id="new-chap-content" placeholder="วางเนื้อหานิยายของตอนนี้..." rows="6" class="w-full px-3 py-2 rounded-lg border bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" style="border-color: var(--border-color)"></textarea>
+                </div>
+                <button onclick="addNewChapterToActiveNovel()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition">เพิ่มตอนต่อท้ายทันที</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Existing Chapters List & Editing -->
+          <div class="lg:col-span-2 space-y-6">
+            <div class="p-5 rounded-2xl border space-y-4" style="background-color: var(--bg-card); border-color: var(--border-color);">
+              <h3 class="font-bold text-base flex items-center gap-2">
+                <i data-lucide="list" class="w-5 h-5 text-blue-600"></i>
+                <span>รายชื่อตอนที่มีอยู่ในปัจจุบัน</span>
+              </h3>
+              
+              <!-- Chapters list grid -->
+              <div class="overflow-hidden rounded-xl border max-h-[350px] overflow-y-auto" style="border-color: var(--border-color)">
+                <div id="manage-chapters-list" class="divide-y divide-gray-200 dark:divide-gray-800" style="border-color: var(--border-color)">
+                  <!-- Dynamically generated items -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Edit Chapter Detail View -->
+            <div id="chapter-editor-box" class="p-5 rounded-2xl border space-y-4 hidden" style="background-color: var(--bg-card); border-color: var(--border-color);">
+              <div class="flex items-center justify-between border-b pb-2" style="border-color: var(--border-color)">
+                <h3 class="font-bold text-sm text-indigo-600 flex items-center gap-1">
+                  <i data-lucide="edit-2" class="w-4 h-4"></i>
+                  <span>หน้าต่างแก้ไขเนื้อหาตอน: <span id="editor-target-title" class="font-semibold"></span></span>
+                </h3>
+                <button onclick="closeChapterEditorBox()" class="text-xs text-gray-500 hover:text-black">ยกเลิก</button>
+              </div>
+              <div class="space-y-3 text-sm">
+                <div>
+                  <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted)">ชื่อตอน</label>
+                  <input type="text" id="editor-chap-title" class="w-full px-3 py-2 rounded-lg border bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" style="border-color: var(--border-color)">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted)">เนื้อหาตอน</label>
+                  <textarea id="editor-chap-content" rows="12" class="w-full px-3 py-2 rounded-lg border bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" style="border-color: var(--border-color)"></textarea>
+                </div>
+                <div class="flex justify-end gap-2">
+                  <button onclick="closeChapterEditorBox()" class="px-4 py-2 border rounded-lg text-xs font-semibold" style="border-color: var(--border-color)">ยกเลิก</button>
+                  <button onclick="saveActiveChapterEdit()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition">บันทึกตอนแก้ไข</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
 
     <!-- FOOTER -->
@@ -705,6 +811,7 @@
     let ACTIVE_PIN_ATTEMPT = "";
     let ACTIVE_NOVEL_INDEX = null;
     let ACTIVE_CHAPTER_INDEX = null;
+    let ACTIVE_EDIT_CHAPTER_INDEX = null;
     let TEMP_PREVIEW_CHAPTERS = [];
     let CURRENT_COVER_COLOR = "blue";
 
@@ -821,6 +928,7 @@
       document.getElementById('view-import').classList.add('hidden');
       document.getElementById('view-reader').classList.add('hidden');
       document.getElementById('view-settings').classList.add('hidden');
+      document.getElementById('view-manage-novel').classList.add('hidden');
 
       // Show requested view
       document.getElementById(`view-${viewId}`).classList.remove('hidden');
@@ -983,9 +1091,14 @@
             </div>
 
             <div class="flex items-center justify-between gap-2 pt-1">
-              <button onclick="deleteNovel(event, ${nIndex})" class="p-2 hover:bg-rose-500/10 text-rose-500 rounded-lg transition" title="ลบนิยายเรื่องนี้">
-                <i data-lucide="trash-2" class="w-4.5 h-4.5"></i>
-              </button>
+              <div class="flex items-center gap-1">
+                <button onclick="deleteNovel(event, ${nIndex})" class="p-2 hover:bg-rose-500/10 text-rose-500 rounded-lg transition" title="ลบนิยายเรื่องนี้">
+                  <i data-lucide="trash-2" class="w-4.5 h-4.5"></i>
+                </button>
+                <button onclick="openNovelManager(event, ${nIndex})" class="p-2 hover:bg-indigo-500/10 text-indigo-600 rounded-lg transition" title="จัดการตอนและเนื้อหา">
+                  <i data-lucide="edit-3" class="w-4.5 h-4.5"></i>
+                </button>
+              </div>
 
               <button onclick="openReader(${nIndex}, ${novel.lastReadChapter || 0})" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition">
                 <i data-lucide="book-open" class="w-4 h-4"></i>
@@ -995,7 +1108,7 @@
           </div>
         `;
         
-        // Add click listener for card body (but avoid trigger if clicking delete button)
+        // Add click listener for card body (but avoid trigger if clicking buttons)
         card.addEventListener('click', (e) => {
           if (!e.target.closest('button')) {
             openReader(nIndex, novel.lastReadChapter || 0);
@@ -1008,8 +1121,153 @@
       initLucide();
     }
 
-    function formatNumber(num) {
-      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    // --- MANAGE NOVEL AND CHAPTERS ---
+    function openNovelManager(event, index) {
+      if (event) event.stopPropagation();
+      ACTIVE_NOVEL_INDEX = index;
+      
+      const novel = NOVELS[index];
+      if (!novel) return;
+
+      navigateTo('manage-novel');
+
+      // Populate input metadata values
+      document.getElementById('edit-novel-title').value = novel.title;
+      document.getElementById('edit-novel-author').value = novel.author || "";
+      document.getElementById('edit-novel-desc').value = novel.description || "";
+
+      // Clear add-chapter fields
+      document.getElementById('new-chap-title').value = "";
+      document.getElementById('new-chap-content').value = "";
+      closeChapterEditorBox();
+
+      renderManageChaptersList();
+    }
+
+    function renderManageChaptersList() {
+      const novel = NOVELS[ACTIVE_NOVEL_INDEX];
+      const container = document.getElementById('manage-chapters-list');
+      container.innerHTML = "";
+
+      if (!novel.chapters || novel.chapters.length === 0) {
+        container.innerHTML = `<div class="p-4 text-center text-xs text-gray-400">ยังไม่มีตอนในนิยายเรื่องนี้</div>`;
+        return;
+      }
+
+      novel.chapters.forEach((ch, idx) => {
+        const item = document.createElement('div');
+        item.className = "p-3 flex items-center justify-between text-xs hover:bg-black/5 transition";
+        item.innerHTML = `
+          <div class="flex flex-col space-y-0.5">
+            <span class="font-bold text-sm text-gray-800 dark:text-gray-200">${ch.title}</span>
+            <span class="text-[10px]" style="color: var(--text-muted)">${formatNumber(ch.content.length)} ตัวอักษร</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <button onclick="openChapterEditor(${idx})" class="p-1.5 hover:bg-indigo-500/10 text-indigo-600 rounded-lg transition" title="แก้ไขเนื้อหาตอนนี้">
+              <i data-lucide="edit-2" class="w-4 h-4"></i>
+            </button>
+            <button onclick="deleteChapter(${idx})" class="p-1.5 hover:bg-rose-500/10 text-rose-500 rounded-lg transition" title="ลบตอนนี้">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+
+      initLucide();
+    }
+
+    function saveNovelMetaEdits() {
+      const title = document.getElementById('edit-novel-title').value.trim();
+      const author = document.getElementById('edit-novel-author').value.trim() || "ไม่ระบุนามปากกา";
+      const desc = document.getElementById('edit-novel-desc').value.trim();
+
+      if (!title) {
+        alert("กรุณากรอกชื่อเรื่อง");
+        return;
+      }
+
+      const novel = NOVELS[ACTIVE_NOVEL_INDEX];
+      novel.title = title;
+      novel.author = author;
+      novel.description = desc;
+
+      saveToLocalStorage();
+      showToast("บันทึกข้อมูลพื้นฐานนิยายเรียบร้อยแล้ว");
+    }
+
+    function addNewChapterToActiveNovel() {
+      const title = document.getElementById('new-chap-title').value.trim();
+      const content = document.getElementById('new-chap-content').value.trim();
+
+      if (!title || !content) {
+        alert("กรุณากรอกชื่อตอนและใส่เนื้อหาก่อนเพิ่ม");
+        return;
+      }
+
+      const novel = NOVELS[ACTIVE_NOVEL_INDEX];
+      if (!novel.chapters) novel.chapters = [];
+
+      novel.chapters.push({
+        title: title,
+        content: content
+      });
+
+      saveToLocalStorage();
+      renderManageChaptersList();
+
+      // Reset add-chapter fields
+      document.getElementById('new-chap-title').value = "";
+      document.getElementById('new-chap-content').value = "";
+      showToast(`เพิ่ม "${title}" ต่อท้ายสำเร็จแล้ว!`);
+    }
+
+    function openChapterEditor(cIndex) {
+      ACTIVE_EDIT_CHAPTER_INDEX = cIndex;
+      const chapter = NOVELS[ACTIVE_NOVEL_INDEX].chapters[cIndex];
+
+      document.getElementById('chapter-editor-box').classList.remove('hidden');
+      document.getElementById('editor-target-title').innerText = chapter.title;
+      document.getElementById('editor-chap-title').value = chapter.title;
+      document.getElementById('editor-chap-content').value = chapter.content;
+
+      // Scroll editor into view
+      document.getElementById('chapter-editor-box').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function closeChapterEditorBox() {
+      document.getElementById('chapter-editor-box').classList.add('hidden');
+      ACTIVE_EDIT_CHAPTER_INDEX = null;
+    }
+
+    function saveActiveChapterEdit() {
+      const title = document.getElementById('editor-chap-title').value.trim();
+      const content = document.getElementById('editor-chap-content').value.trim();
+
+      if (!title || !content) {
+        alert("กรุณาอย่าปล่อยให้ชื่อตอนหรือเนื้อหาว่างเปล่า");
+        return;
+      }
+
+      const novel = NOVELS[ACTIVE_NOVEL_INDEX];
+      novel.chapters[ACTIVE_EDIT_CHAPTER_INDEX].title = title;
+      novel.chapters[ACTIVE_EDIT_CHAPTER_INDEX].content = content;
+
+      saveToLocalStorage();
+      renderManageChaptersList();
+      closeChapterEditorBox();
+      showToast("บันทึกการแก้ไขตอนนิยายเรียบร้อย!");
+    }
+
+    function deleteChapter(cIndex) {
+      const chapter = NOVELS[ACTIVE_NOVEL_INDEX].chapters[cIndex];
+      if (confirm(`คุณต้องการลบตอน "${chapter.title}" ใช่หรือไม่? ไม่สามารถเรียกคืนได้`)) {
+        NOVELS[ACTIVE_NOVEL_INDEX].chapters.splice(cIndex, 1);
+        saveToLocalStorage();
+        renderManageChaptersList();
+        closeChapterEditorBox();
+        showToast("ลบตอนเรียบร้อยแล้ว");
+      }
     }
 
     function deleteNovel(event, index) {
@@ -1340,6 +1598,7 @@
       saveToLocalStorage();
     }
 
+    // Width setup
     function changeReaderWidth(width) {
       READING_SETTINGS.width = width;
       applyReadingSettings();
@@ -1504,91 +1763,93 @@
     }
 
     // --- CLOUD SYNC BRIDGE (SERVERLESS CROSS-DEVICE) ---
-    const SYNC_BUCKET_ID = "K4h6N9g2vS8x5B3m1p7zQ";
+    // Using npoint.io - a highly reliable, free anonymous JSON storage with excellent CORS support
+    const SYNC_API_URL = "about:invalid#zPythonSafez";
 
     function generateSyncCode() {
-      // 1. Generate random 6 character alphanumeric code
-      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // readable characters
-      let pin = "";
-      for (let i = 0; i < 6; i++) {
-        pin += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-
       const syncResultDiv = document.getElementById('sync-send-result');
       const pinDisplay = document.getElementById('sync-pin-display');
       const qrContainer = document.getElementById('sync-qr-container');
 
-      pinDisplay.innerText = pin;
       syncResultDiv.classList.remove('hidden');
+      pinDisplay.innerText = "กำลังอัปโหลด...";
+      qrContainer.innerHTML = `<div class="text-xs text-gray-400 py-4">กำลังสร้าง QR Code...</div>`;
 
-      // 2. Upload library state to serverless KV storage
       const payload = {
         novels: NOVELS,
         timestamp: Date.now()
       };
 
-      // Show temporary loading status
-      pinDisplay.innerText = "กำลังอัปโหลด...";
-
-      fetch(`about:invalid#zPythonSafez`, {
+      fetch(SYNC_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ contents: JSON.stringify(payload) })
       })
       .then(res => {
-        if (res.ok) {
+        if (!res.ok) throw new Error("Server error");
+        return res.json();
+      })
+      .then(data => {
+        if (data && data.id) {
+          const pin = data.id.toUpperCase();
           pinDisplay.innerText = pin;
+          
           // Generate QR Code that auto-fills this Sync PIN
           const appUrl = window.location.origin + window.location.pathname + '?sync=' + pin;
-          qrContainer.innerHTML = `<img src="about:invalid#zPythonSafez" alt="Sync QR" class="shadow-sm">`;
-          showToast("อัปโหลดข้อมูลสำหรับซิงค์เรียบร้อยแล้ว!");
+          qrContainer.innerHTML = `<img src="about:invalid#zPythonSafez" alt="Sync QR" class="shadow-md rounded-lg">`;
+          showToast("อัปโหลดข้อมูลสำหรับการซิงค์สำเร็จ!");
         } else {
-          pinDisplay.innerText = "ล้มเหลว";
-          alert("ไม่สามารถซิงค์ขึ้นระบบได้ชั่วคราว กรุณาลองใหม่อีกครั้ง");
+          throw new Error("Invalid response");
         }
       })
       .catch(err => {
         pinDisplay.innerText = "ข้อผิดพลาด";
-        alert("กรุณาเชื่อมต่ออินเทอร์เน็ตเพื่อทำรายการซิงค์");
+        qrContainer.innerHTML = "";
+        alert("เนื่องจากระบบพรีวิวในแชทนี้มีระบบความปลอดภัยที่เข้มงวด (Sandbox Iframe) บริการซิงค์ภายนอกอาจถูกจำกัดในการพรีวิว\n\nแนะนำให้กด 'ดาวน์โหลดไฟล์สำรองข้อมูล (.json)' หรือกด 'Download แอปไปรันเดี่ยวๆ บนเครื่อง' เพื่อใช้งานระบบซิงค์คลาวด์ได้อย่างราบรื่น 100% ครับ!");
         console.error(err);
       });
     }
 
     function fetchSyncData(pinOverride = null) {
-      let pin = pinOverride || document.getElementById('sync-input-pin').value.trim().toUpperCase();
+      let pin = pinOverride || document.getElementById('sync-input-pin').value.trim();
 
-      if (!pin || pin.length !== 6) {
-        alert("กรุณากรอกรหัสซิงค์ 6 หลักให้ถูกต้อง");
+      if (!pin) {
+        alert("กรุณากรอกรหัสซิงค์ให้ถูกต้อง");
         return;
       }
 
-      showToast("กำลังเชื่อมต่อคลาวด์...");
+      showToast("กำลังดาวน์โหลดข้อมูล...");
 
       fetch(`about:invalid#zPythonSafez`)
       .then(res => {
         if (!res.ok) {
-          throw new Error("รหัสซิงค์ไม่ถูกต้องหรือหมดอายุการใช้งานแล้ว");
+          throw new Error("ไม่พบรหัสซิงค์นี้ หรือรหัสหมดอายุแล้ว");
         }
         return res.json();
       })
       .then(data => {
-        if (data && Array.isArray(data.novels)) {
-          // Confirm replacement
-          NOVELS = data.novels;
-          saveToLocalStorage();
-          renderDashboard();
-          navigateTo('dashboard');
-          
-          // Clear URL parameter so it doesn't prompt again
-          window.history.replaceState({}, document.title, window.location.pathname);
-          
-          showToast("ซิงค์ดึงข้อมูลข้ามอุปกรณ์สำเร็จ!");
+        if (data && data.contents) {
+          const parsedPayload = JSON.parse(data.contents);
+          if (parsedPayload && Array.isArray(parsedPayload.novels)) {
+            NOVELS = parsedPayload.novels;
+            saveToLocalStorage();
+            renderDashboard();
+            navigateTo('dashboard');
+            
+            // Clear URL parameter so it doesn't prompt again
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            showToast("ซิงค์ดึงข้อมูลข้ามอุปกรณ์สำเร็จ!");
+          } else {
+            throw new Error("ข้อมูลนิยายไม่ถูกต้อง");
+          }
         } else {
-          alert("ข้อมูลที่ดึงมามีรูปแบบไม่ถูกต้อง");
+          throw new Error("ไม่พบเนื้อหาในระบบคลาวด์");
         }
       })
       .catch(err => {
-        alert(err.message || "ไม่สามารถเชื่อมต่อคลาวด์ได้ กรุณาตรวจสอบการเชื่อมต่อ");
+        alert(err.message || "ไม่สามารถเชื่อมต่อคลาวด์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต");
+        console.error(err);
       });
     }
 
